@@ -2,9 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://shisirqxz.com/2020/12/30/MSCKF%E7%AC%94%E8%AE%B0/</loc>
+    
+    <lastmod>2020-12-30</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://shisirqxz.com/2020/12/10/Ubuntu%E5%AE%89%E8%A3%85%E5%92%8C%E9%85%8D%E7%BD%AE%E7%BA%AA%E5%BD%95/</loc>
     
-    <lastmod>2020-12-10</lastmod>
+    <lastmod>2020-12-16</lastmod>
     
   </url>
   
@@ -39,7 +46,7 @@
 
   <url>
     <loc>https://shisirqxz.com/</loc>
-    <lastmod>2020-12-10</lastmod>
+    <lastmod>2020-12-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -47,21 +54,35 @@
   
   <url>
     <loc>https://shisirqxz.com/tags/%E8%A7%82%E5%BD%B1/</loc>
-    <lastmod>2020-12-10</lastmod>
+    <lastmod>2020-12-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://shisirqxz.com/tags/Ubuntu/</loc>
-    <lastmod>2020-12-10</lastmod>
+    <lastmod>2020-12-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://shisirqxz.com/tags/%E8%BD%AF%E4%BB%B6%E5%92%8C%E5%B7%A5%E5%85%B7/</loc>
-    <lastmod>2020-12-10</lastmod>
+    <lastmod>2020-12-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://shisirqxz.com/tags/SLAM/</loc>
+    <lastmod>2020-12-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://shisirqxz.com/tags/MSCKF/</loc>
+    <lastmod>2020-12-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -70,14 +91,21 @@
   
   <url>
     <loc>https://shisirqxz.com/categories/%E5%AF%BB%E7%AB%A0%E6%91%98%E5%8F%A5/</loc>
-    <lastmod>2020-12-10</lastmod>
+    <lastmod>2020-12-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://shisirqxz.com/categories/%E5%B7%A5%E5%85%B7%E7%AE%B1/</loc>
-    <lastmod>2020-12-10</lastmod>
+    <lastmod>2020-12-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://shisirqxz.com/categories/SLAM%E5%AD%A6%E4%B9%A0/</loc>
+    <lastmod>2020-12-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
