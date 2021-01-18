@@ -20,26 +20,24 @@
     var CONFIG = {"hostname":"shisirqxz.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","width":240,"display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="MSCKF笔记（一）（Mourikis) 最近打算在MSCKF的框架上做一些工作，参考Mourikis 07年的论文和崔华坤大神的博客，从头到尾推了一下公式。">
+  <meta name="description" content="MSCKF系列笔记：（Mourikis 07) 最近打算在MSCKF的框架上做一些工作，Mourikis 07年的论文算是MSCKF系列的开山之作，阅读论文和崔华坤大神的博客，从头到尾推了一下公式。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="MSCKF系列笔记——07论文公式推导">
-<meta property="og:url" content="https://shisirqxz.com/2020/12/30/MSCKF%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:url" content="https://shisirqxz.com/2020/12/30/MSCKF%E7%AC%94%E8%AE%B0%EF%BC%9AMSCKF07/index.html">
 <meta property="og:site_name" content="Qxz&#39;s Blog">
-<meta property="og:description" content="MSCKF笔记（一）（Mourikis) 最近打算在MSCKF的框架上做一些工作，参考Mourikis 07年的论文和崔华坤大神的博客，从头到尾推了一下公式。">
+<meta property="og:description" content="MSCKF系列笔记：（Mourikis 07) 最近打算在MSCKF的框架上做一些工作，Mourikis 07年的论文算是MSCKF系列的开山之作，阅读论文和崔华坤大神的博客，从头到尾推了一下公式。">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/image-20201202211528276.png">
 <meta property="og:image" content="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/image-20201202212225657.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/image-20201202211755676.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/image-20201202212000085.png">
 <meta property="article:published_time" content="2020-12-30T02:03:33.420Z">
-<meta property="article:modified_time" content="2020-12-30T08:40:24.731Z">
+<meta property="article:modified_time" content="2021-01-10T09:02:06.277Z">
 <meta property="article:author" content="Qxz">
 <meta property="article:tag" content="SLAM">
 <meta property="article:tag" content="MSCKF">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/image-20201202211528276.png">
 
-<link rel="canonical" href="https://shisirqxz.com/2020/12/30/MSCKF%E7%AC%94%E8%AE%B0/">
+<link rel="canonical" href="https://shisirqxz.com/2020/12/30/MSCKF%E7%AC%94%E8%AE%B0%EF%BC%9AMSCKF07/">
 
 
 <script id="page-configurations">
@@ -167,7 +165,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://shisirqxz.com/2020/12/30/MSCKF%E7%AC%94%E8%AE%B0/">
+    <link itemprop="mainEntityOfPage" href="https://shisirqxz.com/2020/12/30/MSCKF%E7%AC%94%E8%AE%B0%EF%BC%9AMSCKF07/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -189,10 +187,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2020-12-30 10:03:33 / Modified: 16:40:24" itemprop="dateCreated datePublished" datetime="2020-12-30T10:03:33+08:00">2020-12-30</time>
+              <time title="Created: 2020-12-30 10:03:33" itemprop="dateCreated datePublished" datetime="2020-12-30T10:03:33+08:00">2020-12-30</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-01-10 17:02:06" itemprop="dateModified" datetime="2021-01-10T17:02:06+08:00">2021-01-10</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -214,8 +218,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="msckf笔记一mourikis">MSCKF笔记（一）（Mourikis)</h1>
-<p>最近打算在MSCKF的框架上做一些工作，参考Mourikis 07年的论文和崔华坤大神的博客，从头到尾推了一下公式。</p>
+        <h1 id="msckf系列笔记mourikis-07">MSCKF系列笔记：（Mourikis 07)</h1>
+<p>最近打算在MSCKF的框架上做一些工作，Mourikis 07年的论文算是MSCKF系列的开山之作，阅读论文和崔华坤大神的博客，从头到尾推了一下公式。</p>
 <a id="more"></a>
 <h2 id="坐标系和状态向量定义">坐标系和状态向量定义</h2>
 <h3 id="a.坐标系定义">A.坐标系定义</h3>
@@ -354,8 +358,8 @@ n=[n_g\quad n_{wg} \quad n_a \quad n_{wa}]^T
 \end{array}\right]
 \]</span> 注意这里的k和k+1对应的并不是两次IMU之间的递推间隔，而是指两次量测更新之间的间隔，这个方程一些不好理解的地方:</p>
 <ul>
-<li>参看附录B就可以发现，连续系统的卡尔曼滤波不会有<span class="math inline">\(P_{k+1|k}\)</span>的概念，通过微分方程积分得到的就是P(t)，那么这里的<span class="math inline">\(P_{II_{k+1|k}}\)</span>是怎么来的呢？我认为它的含义其实是这样：<strong>k+1时刻IMU状态没有被观测修正的情况下的<span class="math inline">\(P(t_{k+1})\)</span>，我们认为它是在k时刻的状态的基础上积分出来的，所以会有k+1|k这个概念。</strong></li>
-<li><span class="math inline">\(P_{CC_{k|k}}\)</span>，为什么这个状态全都是在k时刻呢？我认为是由于关键帧的位姿不存在状态递推，<span class="math inline">\(P_{k+1|k}\)</span>和<span class="math inline">\(P_{k|k}\)</span>是一回事</li>
+<li>参看附录B就可以发现，连续系统的卡尔曼滤波不会有<span class="math inline">\(P_{k+1|k}\)</span>的概念，通过微分方程积分得到的就是P(t)，那么这里的<span class="math inline">\(P_{II_{k+1|k}}\)</span>是怎么来的呢？我认为它的含义其实是这样：<strong>k+1时刻IMU状态没有被观测修正的情况下的<span class="math inline">\(P(t_{k+1})\)</span>，我们认为它是在k时刻的状态的基础上积分出来的，所以会有k+1|k这个概念。</strong>由于作者并没有开源对应的代码，不清楚具体实现的时候是否采用了连续卡尔曼滤波的方式。但是后来依照这篇文章实现的双目MSKCF-VIO中并没有用连续卡尔曼滤波，只在IMU状态递推的过程中用了龙格库塔法。</li>
+<li><span class="math inline">\(P_{CC_{k|k}}\)</span>，这部分状态全都是在k时刻。我认为是由于关键帧的位姿不存在状态递推，<span class="math inline">\(P_{k+1|k}\)</span>和<span class="math inline">\(P_{k|k}\)</span>是一回事</li>
 <li>这里的<span class="math inline">\(P_{k+1|k}\)</span>用于计算产生K(k+1)来修正。</li>
 </ul>
 <h2 id="状态扩增augmentation">状态扩增(augmentation)</h2>
@@ -632,14 +636,21 @@ g_l=g-[\omega_{i\omega}^\omega]_{\times}^2 \bullet p
 \]</span> 这导致加速度的估计会和位移有耦合</p></li>
 <li><p>由于哥氏加速度的影响，加速度的计算中出现了<span class="math inline">\(\omega \times v\)</span>的项，这导致加速度的估计与速度出现了耦合</p></li>
 </ul>
-<p>此时a11对应的公式要重新进行推导，就是说必须把<span class="math inline">\(a_m\)</span>展开来推导，用论文中的<span class="math inline">\(\omega_G\)</span>来对应<span class="math inline">\(\omega_{iw}^w\)</span>于是： $$ <span class="math display">\[\begin{gather*}
-\dot{v_t}=R(I+\delta\theta^{\wedge})[f_b+R^T(g-[\omega_G]_{\times}^2(\hat p+\delta p)-2R^T[\omega_G]_{\times}(\hat v+\delta v)-b_a-n_a-\delta b_a]\\
-
+<p>此时a11对应的公式要重新进行推导，就是说必须把<span class="math inline">\(a_m\)</span>展开来推导，用论文中的<span class="math inline">\(\omega_G\)</span>来对应<span class="math inline">\(\omega_{iw}^w\)</span>，得到 <span class="math display">\[
+\dot{v_t}=R(I+\delta\theta^{\wedge})[f_b+R^T(g-[\omega_G]_{\times}^2(\hat p+\delta p)\\
+-2R^T[\omega_G]_{\times}(\hat v+\delta v)-b_a-n_a-\delta b_a]
+\]</span></p>
+<p><span class="math display">\[
 \dot{\hat v}=R[f_b+R^T(g-[\omega_G]_{\times}^2 \hat{p})-2R^T[\omega_G]_{\times}\hat v-b_a]
-
-\end{gather*}\]</span>  <span class="math display">\[
-同样的，上面两个式子相减，并且忽略掉所有的二阶小量得到
-\]</span> =-R{f_b+R^T(g-[_G]<em>{}^2p)- 2R^T[_G]</em>{}{v}-b_a}\ -2[_G]<em>v-[_G]</em>^2 p-Rb_a-Rn_a  $$ a16就可以与前面的公式F对应起来，其中<span class="math inline">\(R_b^w\)</span>对应了原论文<span class="math inline">\(C_q^T\)</span>。</p>
+\tag{a15}
+\]</span> 同样的，上面两个式子相减，并且忽略掉所有的二阶小量得到 <span class="math display">\[
+\begin{gather*}
+\delta{\dot v}=-R\{f_b+R^T(g-[\omega_G]_{\times}^2\hat p)-
+2R^T[\omega_G]_{\times}{\hat v}-b_a\}\delta{\theta^{\wedge} }\\
+-2[\omega_G]_\times\delta v-[\omega_G]_\times^2 \delta p-R\delta b_a-Rn_a
+\end{gather*}
+\tag{a16}
+\]</span> a16就可以与前面的公式F对应起来，其中<span class="math inline">\(R_b^w\)</span>对应了原论文<span class="math inline">\(C_q^T\)</span>。</p>
 <h3 id="b.-连续系统卡尔曼滤波方程">B. 连续系统卡尔曼滤波方程</h3>
 <p>只研究线性系统，其模型为 <span class="math display">\[
 \begin{array}{l}
@@ -675,16 +686,16 @@ x_{k|k} \rightarrow x(t+\Delta t), &amp; \Phi_{k, k-1} \rightarrow \Phi(t+\Delta
 z_{k} \rightarrow z(t+\Delta t), &amp; \Gamma_{k, k-1} \rightarrow \Gamma(t+\Delta t, t) \\
 x_{k-1|k-1} \rightarrow x(t), &amp; H_{k} \rightarrow H(t+\Delta t) \\
 P_{k \mid k-1} \rightarrow P(t+\Delta t, t), &amp; P_{k \mid k} \rightarrow P(t+\Delta t, t+\Delta t) \\
-P_{k-1 \mid k-1} \rightarrow P(t, t), &amp; K_{k} \rightarrow {K(t+\Delta t)}{\Delta t} \\
-Q_{k-1} \rightarrow \frac{Q(t)}{\Delta t}, R_{k} \rightarrow \frac{R(t+\Delta t)}{\Delta t}
+P_{k-1 \mid k-1} \rightarrow P(t, t), &amp; K_{k} \rightarrow {K(t+\Delta t)} \\
+Q_{k-1} \rightarrow \frac{Q(t+\Delta t)}{\Delta t}, R_{k} \rightarrow \frac{R(t+\Delta t)}{\Delta t}
 \end{array}
 \tag{B4}
-\]</span> 得到等效离散线性系统的方程： $$
+\]</span> 在上面的等效过程中，只有噪声的等效需要考虑离散化的影响，也就是说离散系统的噪声协方差会发生变化，其他的变量都是等效到某个时刻。于是得到等效离散线性系统的方程： $$
 <span class="math display">\[\begin{array}{c}
 \hat x_{k|k}=\hat{x}(t+\Delta t)=\Phi(t+\Delta t, t) \hat{x}(t)+K(t+\Delta t)[z(t+\Delta t) 
 -H(t+\Delta t) \Phi(t+\Delta t, t) \hat{x}(t)] \\
 
-K_k=K(t+\Delta t)\Delta t=P(t+\Delta t, t) H^{T}(t+\Delta t)
+K_k=K(t+\Delta t)=P(t+\Delta t, t) H^{T}(t+\Delta t)
 [H(t+\Delta t) P(t+\Delta t, t) \left.H^{T}(t+\Delta t)+\frac{R(t+\Delta t)}{\Delta t}\right]^{-1} \\
 
 P_{k|k-1}=P(t+\Delta t, t)=\Phi(t+\Delta t, t) P(t, t) \Phi^{T}(t+\Delta t, t) 
@@ -693,9 +704,6 @@ P_{k|k}=P(t+\Delta t, t+\Delta t)=[I-K(t+\Delta t) H(t+\Delta t)] P(t+\Delta t, 
 \end{array}
 \tag{B5}\]</span>
 <p>$$</p>
-<ul>
-<li>对K<sub>k</sub>的理解：一段时间内修正作用的累积</li>
-</ul>
 <h4 id="令delta-t趋于0求极限">3） 令<span class="math inline">\(\Delta T\)</span>趋于0，求极限</h4>
 <p>先求状态的微分方程： <span class="math display">\[
 \begin{aligned}
@@ -706,9 +714,9 @@ P_{k|k}=P(t+\Delta t, t+\Delta t)=[I-K(t+\Delta t) H(t+\Delta t)] P(t+\Delta t, 
 \]</span> 减掉<span class="math inline">\(\hat x(t)\)</span>，除以<span class="math inline">\(\Delta t\)</span>，得到： <span class="math display">\[
 \dot{\hat{x}}(t)=A(t) \hat{x}(t)+K(t)[z(t)-H(t) \hat{x}(t)]
 \tag{B7}
-\]</span> 再求K(t): <span class="math display">\[
+\]</span> 再求K(t)，<span class="math inline">\(K(t+\Delta t)\)</span>实质上是一段时间内修正作用的累积，这个累积和<span class="math inline">\(K(t)\)</span>是没有关系的，或者说我们认为t时刻修正过了，那么对应的<span class="math inline">\(K(t)\)</span>可以取0，所以: <span class="math display">\[
 \begin{aligned}
-K(t) &amp;=\lim_{\Delta t \to 0}\frac{K_k}{\Delta t} \\
+K(t) &amp;=\lim_{\Delta t \to 0}\frac{K(t+\Delta t) }{\Delta t} \\
 &amp;=P(t+\Delta t, t) H^{T}(t+\Delta t)\left[H(t+\Delta t) P(t+\Delta t, t) H^{T}(t+\Delta t)+\frac{R(t+\Delta t)}{\Delta t}\right]^{-1} / \Delta t \\
 &amp;=P(t+\Delta t, t) H^{T}(t+\Delta t)\left[H(t+\Delta t) P(t+\Delta t, t) H^{T}(t+\Delta t) \Delta t+R(t+\Delta t)\right]^{-1}
 \end{aligned}
@@ -753,9 +761,10 @@ R_c^w=R_b^wR_c^b\quad R_c^{w}\delta R_{c&#39;}^c=R_{b}^{w}\delta R_{b&#39;}^{b}R
 \begin{gather*}
 R_c^w(I+\delta{\theta_c}^\wedge)=R_{b}^w(I+\delta{\theta_b}^\wedge)R_c^{b}\\
 R_c^w\delta{\theta_c}^\wedge =R_b^{w} \delta{\theta_b}^\wedge R_w^{b&#39;}
-\end{gather*}\\
+\\
 \delta{\theta_c}^{\wedge}=R_b^c \delta{\theta_b}^{\wedge}R_c^b\\
 \delta{\theta_c}^{\wedge}=(R_b^c \delta{\theta_b})^{\wedge}
+\end{gather*}
 \tag{C4}
 \]</span> <span class="math inline">\(\delta\theta_{c}，\delta\theta_{b}\)</span>分别表示从c系、b系产生的扰动，对应<span class="math inline">\(\delta R_{c&#39;}^{c}\)</span>。于是得到<span class="math inline">\(\delta{\theta_c}=R_b^c \delta{\theta_b}\)</span>，因此Jacobian为： <span class="math display">\[
 \displaystyle
@@ -793,7 +802,7 @@ Ra^{\wedge}R^T=\left[\begin{matrix}
 \tag{C8}
 \]</span></p></li>
 </ul>
-<h4 id="delta-p_c对delta-p_b的jacobian">2)<span class="math inline">\(\delta p_c\)</span>对<span class="math inline">\(\delta p_b\)</span>的Jacobian</h4>
+<h4 id="delta-p_c对delta-p_b的jacobian">2)<span class="math inline">\(\delta P_C\)</span>对<span class="math inline">\(\delta P_B\)</span>的Jacobian</h4>
 <p>先给出理论上<span class="math inline">\(p_b\)</span>到<span class="math inline">\(p_c\)</span>的转换公式： <span class="math display">\[
 ^wp_c={ }^wp_b+R_b^w \bullet { } ^bp_c
 \tag{C9}
@@ -836,19 +845,27 @@ Ra^{\wedge}R^T=\left[\begin{matrix}
 \frac{\partial{\hat P}}{\partial\hat \theta_{c}}
 =-J_{\hat P_c}[R_w^c({}^w\hat p_{f}-{}^w\hat p_{c})]^{\wedge}
 \tag{D2}
-\]</span> 实质上是个李代数的求导，参见高博的SLAM十四讲。其中 <span class="math display">\[
+\]</span> 其中 <span class="math display">\[
 J_{\hat P_c}=\frac{\partial{\hat z}}{\partial\hat P}=
 \frac{1}{\hat{Z}}\left[\begin{array}{ccc}
 1 &amp; 0 &amp; -\frac{\hat X}{\hat Z} \\
 0 &amp; 1 &amp; -\frac{\hat Y}{\hat{Z}}
 \end{array}\right]
 \tag{D3}
-\]</span> 同理： <span class="math display">\[
+\]</span> D2中的<span class="math inline">\(\frac{\partial{\hat P}}{\partial\hat \theta_{c}}\)</span>实质上是个李代数的求导，参见高博的SLAM十四讲。要注意的地方是，十四讲中李代数求导的部分完全没有考虑上下标的对应关系，我认为不太准确。记<span class="math inline">\(({}^w\hat p_{f}-{}^w\hat p_{c})=p\)</span>，则 <span class="math display">\[
+\frac{\partial R_w^cp}{\partial \delta\theta_c}=
+\frac{R_c^{c&#39;}R_w^cp-R_w^cp}{\delta \theta_c}
+=\frac{(I-[\delta{\theta_c]_\times})R_w^cp
+-R_w^c p}{\delta \theta_c}\\
+=[R_w^cp]_{\times}
+\tag{D4}
+\]</span> 注意在上面的转换中，旋转矩阵的左扰动对应的旋转角不在c系中，而在c'系中，因此是<span class="math inline">\(R_c^{c&#39;}=R_{c&#39;}^{cT}=(I+[\delta{\theta_c]_\times})^T=(I-[\delta{\theta_c]_\times})\)</span>。求得的形式与TR-MSCKF中的形式保持了一致。</p>
+<p>同理： <span class="math display">\[
 \frac{\partial{\hat z}}{\partial^w\hat p_{c}}=
 \frac{\partial{\hat z}}{\partial\hat P}
 \frac{\partial{\hat P}}{\partial^w\hat p_{c}}
 =-J_{\hat P_c}R_w^c
-\tag{D4}
+\tag{D5}
 \]</span> 对其他状态的偏导数都为0，所以 <span class="math display">\[
 \begin{gather*}
 H_{X}=\frac{\partial{\hat z}}{\partial \tilde{X}} 
@@ -857,7 +874,7 @@ H_{X}=\frac{\partial{\hat z}}{\partial \tilde{X}}
 &amp; -J_{\hat P_c}R_w^c &amp; \cdots
 \end{array}\right]
 \end{gather*}
-\tag{D5}
+\tag{D6}
 \]</span> 对<span class="math inline">\(^G\hat p_f\)</span>的Jacobian矩阵为： <span class="math display">\[
 H_{f}=\frac{\partial{\hat z}}{\partial^w\hat p_{f}}=
 \frac{\partial{\hat z}}{\partial\hat P}
@@ -865,10 +882,7 @@ H_{f}=\frac{\partial{\hat z}}{\partial^w\hat p_{f}}=
 =J_{\hat P_c}R_w^c
 \tag{D6}
 \]</span></p>
-<p>用图像来描述单个路标点生成的Jacobian矩阵的结构为：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/image-20201202211755676.png" alt="image-20201202212000085"  /></p>
-<p>当新的一帧中有多个路标点触发了更新的条件时，Jacobian矩阵的结构为：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/image-20201202212000085.png" alt="image-20201202212000085"  /></p>
+<h4 id="关于使用不同">关于使用不同</h4>
 <h3 id="e-givens-rotation">E Givens Rotation</h3>
 <p>吉文斯旋转其实本质上就是一个二维平面上的旋转矩阵的扩展，这个方法主要用来对矩阵进行QR分解，也就自然而然能用于求解线性方程组。其形式如下： <span class="math display">\[
 G(i, j, \theta)=\left[\begin{array}{ccccccc}
@@ -928,7 +942,10 @@ r \\
     <a href="/2020/12/10/Ubuntu%E5%AE%89%E8%A3%85%E5%92%8C%E9%85%8D%E7%BD%AE%E7%BA%AA%E5%BD%95/" rel="prev" title="Ubuntu安装和开发环境配置">
       <i class="fa fa-chevron-left"></i> Ubuntu安装和开发环境配置
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2021/01/18/MSCKF%E7%B3%BB%E5%88%97%E7%AC%94%E8%AE%B0%EF%BC%9AMSCKF-VIO/" rel="next" title="MSCKF系列笔记：MSCKF-VIO">
+      MSCKF系列笔记：MSCKF-VIO <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -987,7 +1004,7 @@ r \\
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#msckf%E7%AC%94%E8%AE%B0%E4%B8%80mourikis"><span class="nav-number">1.</span> <span class="nav-text">MSCKF笔记（一）（Mourikis)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9D%90%E6%A0%87%E7%B3%BB%E5%92%8C%E7%8A%B6%E6%80%81%E5%90%91%E9%87%8F%E5%AE%9A%E4%B9%89"><span class="nav-number">1.1.</span> <span class="nav-text">坐标系和状态向量定义</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#a.%E5%9D%90%E6%A0%87%E7%B3%BB%E5%AE%9A%E4%B9%89"><span class="nav-number">1.1.1.</span> <span class="nav-text">A.坐标系定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#b.%E7%8A%B6%E6%80%81%E5%90%91%E9%87%8F%E5%AE%9A%E4%B9%89"><span class="nav-number">1.1.2.</span> <span class="nav-text">B.状态向量定义</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#imu%E7%8A%B6%E6%80%81%E5%90%91%E9%87%8F15%E7%BB%B4"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">IMU状态向量（15维）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%9B%B8%E6%9C%BA%E7%9A%84%E4%BD%8D%E5%A7%BF6n%E7%BB%B4"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">相机的位姿（6N维）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AF%AF%E5%B7%AE%E7%8A%B6%E6%80%81%E5%90%91%E9%87%8F"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">误差状态向量</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9E%E7%BB%AD%E7%B3%BB%E7%BB%9F%E5%BB%BA%E6%A8%A1"><span class="nav-number">1.2.</span> <span class="nav-text">连续系统建模</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%BC%E8%88%AA%E6%96%B9%E7%A8%8B"><span class="nav-number">1.2.1.</span> <span class="nav-text">导航方程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A5%E8%AF%AF%E5%B7%AE%E9%87%8F%E4%B8%BA%E7%8A%B6%E6%80%81%E7%9A%84%E9%80%92%E6%8E%A8%E6%96%B9%E7%A8%8B"><span class="nav-number">1.2.2.</span> <span class="nav-text">以误差量为状态的递推方程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A6%BB%E6%95%A3%E5%8C%96%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.3.</span> <span class="nav-text">离散化实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%8A%B6%E6%80%81%E6%89%A9%E5%A2%9Eaugmentation"><span class="nav-number">1.4.</span> <span class="nav-text">状态扩增(augmentation)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%AF%E5%B7%AE%E7%8A%B6%E6%80%81%E7%9A%84%E4%BA%A7%E7%94%9F"><span class="nav-number">1.4.1.</span> <span class="nav-text">误差状态的产生</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8F%E6%96%B9%E5%B7%AE%E7%9F%A9%E9%98%B5%E7%9A%84%E5%A2%9E%E5%B9%BF"><span class="nav-number">1.4.2.</span> <span class="nav-text">协方差矩阵的增广</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E9%87%8F%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.5.</span> <span class="nav-text">测量模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%82%E6%B5%8B%E7%9A%84%E9%A2%84%E6%B5%8B%E5%92%8C%E6%AE%8B%E5%B7%AE"><span class="nav-number">1.5.1.</span> <span class="nav-text">观测的预测和残差</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#jacobian%E8%AE%A1%E7%AE%97"><span class="nav-number">1.5.2.</span> <span class="nav-text">Jacobian计算</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ekf%E7%9A%84%E6%9B%B4%E6%96%B0%E7%AD%96%E7%95%A5"><span class="nav-number">1.6.</span> <span class="nav-text">EKF的更新策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%AE%E9%A2%98"><span class="nav-number">1.7.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%84%E5%BD%95"><span class="nav-number">1.8.</span> <span class="nav-text">附录</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#a.-%E7%8A%B6%E6%80%81%E6%96%B9%E7%A8%8B%E4%B8%ADfg%E7%9F%A9%E9%98%B5%E7%9A%84%E6%8E%A8%E5%AF%BC"><span class="nav-number">1.8.1.</span> <span class="nav-text">A. 状态方程中F、G矩阵的推导</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%92%E5%BA%A6%E5%BE%AE%E5%88%86%E6%96%B9%E7%A8%8B"><span class="nav-number">1.8.1.1.</span> <span class="nav-text">1）角度微分方程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%9F%E5%BA%A6%E5%BE%AE%E5%88%86%E6%96%B9%E7%A8%8B"><span class="nav-number">1.8.1.2.</span> <span class="nav-text">2）速度微分方程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#b.-%E8%BF%9E%E7%BB%AD%E7%B3%BB%E7%BB%9F%E5%8D%A1%E5%B0%94%E6%9B%BC%E6%BB%A4%E6%B3%A2%E6%96%B9%E7%A8%8B"><span class="nav-number">1.8.2.</span> <span class="nav-text">B. 连续系统卡尔曼滤波方程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BB%BA%E7%AB%8B%E7%AD%89%E6%95%88%E7%A6%BB%E6%95%A3%E6%96%B9%E7%A8%8B"><span class="nav-number">1.8.2.1.</span> <span class="nav-text">1）建立等效离散方程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B1%82%E7%AD%89%E6%95%88%E7%A6%BB%E6%95%A3%E6%A8%A1%E5%9E%8B%E7%9A%84%E5%8D%A1%E5%B0%94%E6%9B%BC%E6%BB%A4%E6%B3%A2%E6%96%B9%E7%A8%8B"><span class="nav-number">1.8.2.2.</span> <span class="nav-text">2) 求等效离散模型的卡尔曼滤波方程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%A4delta-t%E8%B6%8B%E4%BA%8E0%E6%B1%82%E6%9E%81%E9%99%90"><span class="nav-number">1.8.2.3.</span> <span class="nav-text">3） 令\(\Delta T\)趋于0，求极限</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#c.%E5%A2%9E%E5%B9%BF%E7%8A%B6%E6%80%81%E5%AF%B9imu%E7%8A%B6%E6%80%81%E7%9A%84%E5%81%8F%E5%AF%BC"><span class="nav-number">1.8.3.</span> <span class="nav-text">C.增广状态对IMU状态的偏导</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#delta-theta_c%E5%AF%B9delta-theta_b%E7%9A%84jacobian"><span class="nav-number">1.8.3.1.</span> <span class="nav-text">1）\(\delta \theta_c\)对\(\delta \theta_b\)的Jacobian</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#delta-p_c%E5%AF%B9delta-p_b%E7%9A%84jacobian"><span class="nav-number">1.8.3.2.</span> <span class="nav-text">2)\(\delta p_c\)对\(\delta p_b\)的Jacobian</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#d-%E8%A7%82%E6%B5%8B%E6%AE%8B%E5%B7%AE%E5%AF%B9%E7%8A%B6%E6%80%81%E7%9A%84jacobian"><span class="nav-number">1.8.4.</span> <span class="nav-text">D 观测残差对状态的Jacobian</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#e-givens-rotation"><span class="nav-number">1.8.5.</span> <span class="nav-text">E Givens Rotation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">1.9.</span> <span class="nav-text">参考文献：</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#msckf%E7%B3%BB%E5%88%97%E7%AC%94%E8%AE%B0mourikis-07"><span class="nav-number">1.</span> <span class="nav-text">MSCKF系列笔记：（Mourikis 07)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9D%90%E6%A0%87%E7%B3%BB%E5%92%8C%E7%8A%B6%E6%80%81%E5%90%91%E9%87%8F%E5%AE%9A%E4%B9%89"><span class="nav-number">1.1.</span> <span class="nav-text">坐标系和状态向量定义</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#a.%E5%9D%90%E6%A0%87%E7%B3%BB%E5%AE%9A%E4%B9%89"><span class="nav-number">1.1.1.</span> <span class="nav-text">A.坐标系定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#b.%E7%8A%B6%E6%80%81%E5%90%91%E9%87%8F%E5%AE%9A%E4%B9%89"><span class="nav-number">1.1.2.</span> <span class="nav-text">B.状态向量定义</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#imu%E7%8A%B6%E6%80%81%E5%90%91%E9%87%8F15%E7%BB%B4"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">IMU状态向量（15维）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%9B%B8%E6%9C%BA%E7%9A%84%E4%BD%8D%E5%A7%BF6n%E7%BB%B4"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">相机的位姿（6N维）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AF%AF%E5%B7%AE%E7%8A%B6%E6%80%81%E5%90%91%E9%87%8F"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">误差状态向量</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9E%E7%BB%AD%E7%B3%BB%E7%BB%9F%E5%BB%BA%E6%A8%A1"><span class="nav-number">1.2.</span> <span class="nav-text">连续系统建模</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%BC%E8%88%AA%E6%96%B9%E7%A8%8B"><span class="nav-number">1.2.1.</span> <span class="nav-text">导航方程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A5%E8%AF%AF%E5%B7%AE%E9%87%8F%E4%B8%BA%E7%8A%B6%E6%80%81%E7%9A%84%E9%80%92%E6%8E%A8%E6%96%B9%E7%A8%8B"><span class="nav-number">1.2.2.</span> <span class="nav-text">以误差量为状态的递推方程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A6%BB%E6%95%A3%E5%8C%96%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.3.</span> <span class="nav-text">离散化实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%8A%B6%E6%80%81%E6%89%A9%E5%A2%9Eaugmentation"><span class="nav-number">1.4.</span> <span class="nav-text">状态扩增(augmentation)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%AF%E5%B7%AE%E7%8A%B6%E6%80%81%E7%9A%84%E4%BA%A7%E7%94%9F"><span class="nav-number">1.4.1.</span> <span class="nav-text">误差状态的产生</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8F%E6%96%B9%E5%B7%AE%E7%9F%A9%E9%98%B5%E7%9A%84%E5%A2%9E%E5%B9%BF"><span class="nav-number">1.4.2.</span> <span class="nav-text">协方差矩阵的增广</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E9%87%8F%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.5.</span> <span class="nav-text">测量模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%82%E6%B5%8B%E7%9A%84%E9%A2%84%E6%B5%8B%E5%92%8C%E6%AE%8B%E5%B7%AE"><span class="nav-number">1.5.1.</span> <span class="nav-text">观测的预测和残差</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#jacobian%E8%AE%A1%E7%AE%97"><span class="nav-number">1.5.2.</span> <span class="nav-text">Jacobian计算</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ekf%E7%9A%84%E6%9B%B4%E6%96%B0%E7%AD%96%E7%95%A5"><span class="nav-number">1.6.</span> <span class="nav-text">EKF的更新策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%AE%E9%A2%98"><span class="nav-number">1.7.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%84%E5%BD%95"><span class="nav-number">1.8.</span> <span class="nav-text">附录</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#a.-%E7%8A%B6%E6%80%81%E6%96%B9%E7%A8%8B%E4%B8%ADfg%E7%9F%A9%E9%98%B5%E7%9A%84%E6%8E%A8%E5%AF%BC"><span class="nav-number">1.8.1.</span> <span class="nav-text">A. 状态方程中F、G矩阵的推导</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%92%E5%BA%A6%E5%BE%AE%E5%88%86%E6%96%B9%E7%A8%8B"><span class="nav-number">1.8.1.1.</span> <span class="nav-text">1）角度微分方程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%9F%E5%BA%A6%E5%BE%AE%E5%88%86%E6%96%B9%E7%A8%8B"><span class="nav-number">1.8.1.2.</span> <span class="nav-text">2）速度微分方程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#b.-%E8%BF%9E%E7%BB%AD%E7%B3%BB%E7%BB%9F%E5%8D%A1%E5%B0%94%E6%9B%BC%E6%BB%A4%E6%B3%A2%E6%96%B9%E7%A8%8B"><span class="nav-number">1.8.2.</span> <span class="nav-text">B. 连续系统卡尔曼滤波方程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BB%BA%E7%AB%8B%E7%AD%89%E6%95%88%E7%A6%BB%E6%95%A3%E6%96%B9%E7%A8%8B"><span class="nav-number">1.8.2.1.</span> <span class="nav-text">1）建立等效离散方程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B1%82%E7%AD%89%E6%95%88%E7%A6%BB%E6%95%A3%E6%A8%A1%E5%9E%8B%E7%9A%84%E5%8D%A1%E5%B0%94%E6%9B%BC%E6%BB%A4%E6%B3%A2%E6%96%B9%E7%A8%8B"><span class="nav-number">1.8.2.2.</span> <span class="nav-text">2) 求等效离散模型的卡尔曼滤波方程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%A4delta-t%E8%B6%8B%E4%BA%8E0%E6%B1%82%E6%9E%81%E9%99%90"><span class="nav-number">1.8.2.3.</span> <span class="nav-text">3） 令\(\Delta T\)趋于0，求极限</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#c.%E5%A2%9E%E5%B9%BF%E7%8A%B6%E6%80%81%E5%AF%B9imu%E7%8A%B6%E6%80%81%E7%9A%84%E5%81%8F%E5%AF%BC"><span class="nav-number">1.8.3.</span> <span class="nav-text">C.增广状态对IMU状态的偏导</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#delta-theta_c%E5%AF%B9delta-theta_b%E7%9A%84jacobian"><span class="nav-number">1.8.3.1.</span> <span class="nav-text">1）\(\delta \theta_c\)对\(\delta \theta_b\)的Jacobian</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#delta-p_c%E5%AF%B9delta-p_b%E7%9A%84jacobian"><span class="nav-number">1.8.3.2.</span> <span class="nav-text">2)\(\delta P_C\)对\(\delta P_B\)的Jacobian</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#d-%E8%A7%82%E6%B5%8B%E6%AE%8B%E5%B7%AE%E5%AF%B9%E7%8A%B6%E6%80%81%E7%9A%84jacobian"><span class="nav-number">1.8.4.</span> <span class="nav-text">D 观测残差对状态的Jacobian</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E4%BD%BF%E7%94%A8%E4%B8%8D%E5%90%8C"><span class="nav-number">1.8.4.1.</span> <span class="nav-text">关于使用不同</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#e-givens-rotation"><span class="nav-number">1.8.5.</span> <span class="nav-text">E Givens Rotation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">1.9.</span> <span class="nav-text">参考文献：</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -1001,7 +1018,7 @@ r \\
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">5</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -1049,7 +1066,7 @@ r \\
 <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2020</span>
+  <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
