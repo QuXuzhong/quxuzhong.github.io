@@ -28,7 +28,7 @@
 <meta property="og:description" content="MSCKF笔记：可观性问题 总结一下SLAM系统中的可观性问题。如果使用最新的状态来估计状态和观测的Jacobian矩阵，线性化的误差状态系统模型（比如MSCKF）的可观子空间的维数会变得比真实的非线性系统的可观子空间的维数更高，也就是说，有一些本来不可观的状态可观了，这会导致系统的一致性（Consistency）变差。 针对这个问题，主流的解决方法有两种：李明扬老师提出的FEJ（参考文献1）">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-02-06T10:31:43.216Z">
-<meta property="article:modified_time" content="2021-02-06T10:31:34.680Z">
+<meta property="article:modified_time" content="2021-02-06T10:34:21.792Z">
 <meta property="article:author" content="Qxz">
 <meta property="article:tag" content="SLAM">
 <meta property="article:tag" content="MSCKF">
@@ -188,7 +188,16 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2021-02-06 18:31:43 / Modified: 18:31:34" itemprop="dateCreated datePublished" datetime="2021-02-06T18:31:43+08:00">2021-02-06</time>
+              <time title="Created: 2021-02-06 18:31:43 / Modified: 18:34:21" itemprop="dateCreated datePublished" datetime="2021-02-06T18:31:43+08:00">2021-02-06</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/SLAM%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">SLAM学习</span></a>
+                </span>
             </span>
 
           
@@ -226,14 +235,14 @@
 <p>按照李明扬老师的分析，MSCKF和EKF-SLAM的IMU误差状态方程和残差测量模型其实是完全一致的，只是计算各种Jacobian的时候使用了不同的线性化点<u>（不太明白，是指对不同的状态线性化么？）</u>。所以我们只需要调整线性化点，就可以按照分析EKF-SLAM系统的方式来分析MSCKF系统的可观性问题。对于MSCKF系统而言，其模型如下：</p>
 <p>状态变量： <span class="math display">\[
 \mathbf{x}_{I}=\left[\begin{array}{cccccc}
-^I_G \overline{\mathbf{q}}^{T} &amp; ^G\mathbf{p}^{T} &amp; ^G{\mathbf{v}}^{T} &amp; ^G{\mathbf{p}_{1}}^{T} &amp; \cdots &amp; { }^{G} \mathbf{p}_{N}^{T}
+^I_G \overline{\mathbf{q} }^{T} &amp; ^G\mathbf{p}^{T} &amp; ^G{\mathbf{v}}^{T} &amp; ^G{\mathbf{p}_{1} }^{T} &amp; \cdots &amp; { }^{G} \mathbf{p}_{N}^{T}
 \end{array}\right]^{T}
 \]</span> 这里我们不考虑IMU的零偏，事实上也可证考虑零偏不会影响后面的推导。所以状态中包含了IMU的9维p、v、q，以及N个特征点的位置。考虑<span class="math inline">\(l\)</span>时刻，有<span class="math inline">\(n_l\)</span>个特征点生成了观测，观测对状态的Jacobian主要包含两部分：对IMU状态的偏导<span class="math inline">\(H_{I_i,l}\)</span>和对特征点位置的偏导<span class="math inline">\(H_{f_i}\)</span>，即： <span class="math display">\[
 \begin{array}{l}
-\mathbf{H}_{I_{i, \ell}}=\mathbf{J}_{i, \ell} {}^C_{I}{\mathbf{R}}
-\left[\left\lfloor\hat{\mathbf{R}}_{\ell \mid \alpha_{i}}\left({ }^{G} \hat{\mathbf{p}}_{f_{i}}-{ }^{G} \hat{\mathbf{p}}_{\ell \mid \alpha_{i}}\right) \times\right\rfloor
-\quad -\hat{\mathbf{R}}_{\ell \mid \alpha_{i}} \quad\mathbf{0}_{3}\right] \\
-\mathbf{H}_{f_{i, \ell}}=\mathbf{J}_{i, \ell}{ }^C_{I} \mathbf{R} \hat{\mathbf{R}}_{\ell \mid \alpha_{i}}
+\mathbf{H}_{I_{i, \ell} }=\mathbf{J}_{i, \ell} {}^C_{I}{\mathbf{R}}
+\left[\left\lfloor\hat{\mathbf{R}}_{\ell \mid \alpha_{i}}\left({ }^{G} \hat{\mathbf{p} }_{f_{i} }-{ }^{G} \hat{\mathbf{p} }_{\ell \mid \alpha_{i} }\right) \times\right\rfloor
+\quad -\hat{\mathbf{R} }_{\ell \mid \alpha_{i}} \quad\mathbf{0}_{3}\right] \\
+\mathbf{H}_{f_{i, \ell} }=\mathbf{J}_{i, \ell}{ }^C_{I} \mathbf{R} \hat{\mathbf{R} }_{\ell \mid \alpha_{i} }
 \end{array}
 \]</span> 其中<span class="math inline">\(\alpha_i\)</span>表示第i个特征在<span class="math inline">\(\alpha_i+1\)</span>的时刻用于MSCKF更新。似乎是说观测更新和MSCKF更新不是一回事，使用的是上一次MSCKF更新后得到的状态估计值。==这里看得不是特别懂==。残差线性化的模型为 <span class="math display">\[
 \mathbf{r}_{i, \ell}=\mathbf{H}_{I_{i, \ell}} \tilde{\mathbf{x}}_{I_{\ell \mid \ell-1}}+\mathbf{H}_{f_{i, \ell}}^{G} \tilde{\mathbf{p}}_{f_{i}}+\mathbf{n}_{i, \ell}
@@ -571,6 +580,61 @@
   
 
   
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+          load: ['[tex]/mhchem'],
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+          packages: {'[+]': ['mhchem']},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 
