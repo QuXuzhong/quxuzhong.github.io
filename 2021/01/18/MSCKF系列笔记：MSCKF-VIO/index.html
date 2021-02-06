@@ -28,7 +28,7 @@
 <meta property="og:description" content="MSCKF系列笔记：MSCKF-VIO MSCKF-VIO是Kumar团队实现的一个开源的双目MSCKFVIO方案，代码非常简洁，比较适合上手，所以决定先看一下这篇文章和其源码。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-01-18T09:25:18.409Z">
-<meta property="article:modified_time" content="2021-01-18T09:33:27.603Z">
+<meta property="article:modified_time" content="2021-02-06T10:27:42.818Z">
 <meta property="article:author" content="Qxz">
 <meta property="article:tag" content="SLAM">
 <meta property="article:tag" content="MSCKF">
@@ -184,10 +184,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2021-01-18 17:25:18 / Modified: 17:33:27" itemprop="dateCreated datePublished" datetime="2021-01-18T17:25:18+08:00">2021-01-18</time>
+              <time title="Created: 2021-01-18 17:25:18" itemprop="dateCreated datePublished" datetime="2021-01-18T17:25:18+08:00">2021-01-18</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-02-06 18:27:42" itemprop="dateModified" datetime="2021-02-06T18:27:42+08:00">2021-02-06</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -300,9 +306,9 @@ C_{n}
 <p>文章采用了OC-EKF的修正策略，作者说主要原因是FEJ更依赖与精确的初始估计。关于OC-EKF的具体分析可以参见我的另一篇博客。</p>
 <p>作者还提到，不同于以机器人为中心的滤波方程，相机位姿表示在惯性系下而非上一时刻的IMU坐标系下，可以避免上一时刻IMU位姿不准确导致传播的精度受损。<u>不是特别理解这是和哪些文章对比得到的结论</u>。</p>
 <h3 id="滤波器观测更新策略">滤波器观测更新策略</h3>
-<p>MSCKF中进行量测更新的情况有两种：1.当一个特征点被丢掉时会用这个特征点形成的观测误差进行一次更新；2.当状态中累积的相机位姿数量达到上限值N个时，需要丢弃部分相机位姿，会利用这部分相机位姿对特征点的观测进行一次更新。（==是更新全部位姿？还是只利用要丢弃的相机位姿形成观测==）</p>
+<p>MSCKF中进行量测更新的情况有两种：1.当一个特征点被丢掉时会用这个特征点形成的观测误差进行一次更新；2.当状态中累积的相机位姿数量达到上限值N个时，需要丢弃部分相机位姿，会利用这部分相机位姿对特征点的观测进行一次更新。</p>
 <p>本文采取了类似的更新策略，但是考虑到算法的实时性问题，进行了一定的调整。MSCKF中每次相机位姿超过上限会直接丢掉<span class="math inline">\(\frac 1 3\)</span>的相机位姿，这会导致计算的负担有突变，为了使算力的消耗更加平均，最理想的情况是每次滑动只丢弃一帧的位姿，但是在MSCKF系统中这是不可能的（作者的表述是说MSCKF并不存储相机之间的相对位姿变换，数学上来分析这是因为对于某一帧而言<span class="math inline">\(H_{f_i}^j\)</span>的左零空间是<span class="math inline">\(H_{C_i}^j\)</span>左零空间的子空间，投影到左零空间以后都会被消掉。原文的附录C中有详细推导)。</p>
-<p>因此作者采用的方案是每次滑动窗口时丢弃两帧相机状态，所有被两帧<strong>共同观测到</strong>的特征都会用来进行一次量测更新（这里不太理解，是说在相机坐标系下进行三角化吗？）。这样的话构成的是一个8维的观测误差，对某个特征点<span class="math inline">\(H_{f}^j\)</span>的维数是<span class="math inline">\(8*3\)</span>。这种频繁的滑动会导致某些比较valid的观测被忽视了，但在实践中作者发现尽管使用的观测更新少了一些，整体的估计效果没有受到太大的影响。</p>
+<p>因此作者采用的方案是每次滑动窗口时丢弃两帧相机状态，所有被两帧<strong>共同观测到</strong>的特征都会用来进行一次量测更新。这样的话构成的是一个8维的观测误差，对某个特征点<span class="math inline">\(H_{f}^j\)</span>的维数是<span class="math inline">\(8*3\)</span>。这种频繁的滑动会导致某些比较valid的观测被忽视了，但在实践中作者发现尽管使用的观测更新少了一些，整体的估计效果没有受到太大的影响。</p>
 <p>在选择要丢弃的两帧时，使用了类似VINS-MONO的边缘化帧挑选策略，要么删去最老的帧，要么删去次新帧，每次滑动执行两次这个边缘化过程丢弃两帧。（这个道理很简单，如果次新帧和它的上一帧的视差比较小的话，认为这一帧没有提供太多新的信息，否则的话就把最老的帧删掉）。最新的帧总是被保留，因为我们认为它包含了最多的新检测到的特征点。</p>
 <h3 id="前端图像处理">前端图像处理</h3>
 <p>前端使用了FAST+KLT光流的方式进行特征跟踪，同时使用了KLT光流对双目的观测图像进行特征匹配。经验上来讲，深度大于1米的角点配置20cm的双目基线长度，使用KLT光流可以实现可靠的匹配。</p>
@@ -353,8 +359,7 @@ C_{n}
 <p>上面的跟踪过程构成了一个闭环，经过严格筛选后每一步都能保留下来的点被认为是跟踪上的点更新到当前特征点的容器中。输出跟踪的成功率。</p>
 <p>-&gt;注意使用角速度积分的得到的旋转角是在前一帧坐标系下的，罗德里格斯公式对应的旋转矩阵是从当前帧到上一帧的，需要取转置。</p>
 <p>-&gt;为了保证数值稳定性，点都转换到了归一化坐标系中，并且进行了重新尺度化。</p>
-<p>-&gt;<strong>这里和上面的特征点初值估计都没有加入平移的考虑，为什么呢？</strong></p>
-<p>-&gt;<strong>估计初值的时候先把所有的点通过内参矩阵变换到了归一化坐标系下，取了<span class="math inline">\(H=KRK^{-1}\)</span>，这又是为什么</strong></p></li>
+<p>-&gt;<strong>这里和上面的特征点初值估计都没有加入平移的考虑，为什么呢？</strong></p></li>
 <li><p>addNewFeatures：经过前面的筛选可能保留的特征点不够多，设置掩码在图像中提取新的特征点，再进行左右相机的光流跟踪，将跟踪到的响应值最大的点添加到对应的网格中，直至网格中的点数达到最低限度或没有可添加的点为止。这一步保证了特征点的分布是足够均匀的。</p></li>
 <li><p>pruneGridFeatures：如果一个网格中当前帧的特征点数太多，按照其跟踪时间进行排序，剔除掉跟踪时间较短的点。这一步主要是为了避免跟踪的特征点扎堆的情况，因为前一帧的特征点一定是均匀分布的，如果某些特征点都跟踪到了当前帧同一个网格中，首先破坏了当前帧特征点分布的均匀性，其次也降低了这些点跟踪的置信度。（之前做过一些光流跟踪的实验，这一步应该是比较关键的，光流扎堆的情况在灰度变化的情况下很可能出现）</p></li>
 </ul>
@@ -363,7 +368,7 @@ C_{n}
 <p>featureCallback：主要实现MSCKF算法的回调函数。</p>
 <ul>
 <li><p>batchImuProcessing：对前一帧时刻到当前帧时刻之间的IMU数据进行积分，完成计算后清除缓存中对应的imu数据。计算主要分成以下几步:首先根据加速度计和陀螺仪的测量求得F、G矩阵。然后使用3阶泰勒展开计算两帧之间的状态转移矩阵；接着使用四阶龙格库塔法积分p,v,q；然后按照OC-EKF的做法对可观性问题进行了修正。最后更新了协方差矩阵。</p>
-<p>-&gt;计算状态转移矩阵<span class="math inline">\(\Phi({k|k+1})\)</span>使用的是<span class="math inline">\(F(t_{k+1})\)</span>，<strong>这样是否合理？</strong></p>
+<p>-&gt;这里的计算实际上可以看做一个无修正的卡尔曼滤波过程，只用惯导的信息在递推协方差的变化，修正要一直等到下一帧图像数据到来的时刻。</p>
 <p>-&gt;四元数的更新使用了毕卡求解法，具体参见秦永元《惯性导航》第二版P254方程9.2.52</p>
 <p>-&gt;为了保持协方差矩阵的对称性，求得的协方差矩阵取了<span class="math inline">\(P=(P+P^T)/2\)</span></p>
 <p>-&gt;为每一时刻的IMU状态在计算后都会给定一个独一无二的ID，最终目的是为了对应到每个时刻的相机状态都有一个独一无二的ID</p></li>
@@ -382,7 +387,7 @@ C_{n}
 <p>-&gt;注意，虽然量测更新只用到了两个待删除帧的观测，但特征点的三角化过程是按照前面的三角化方式用到了所有观测到此特征点的相机位姿，从而保证了点的三角化结果精度是够高的，并且之后这个特征点不再被观测到的时候也不会再进行重复的三角化，直接利用本次的三角化结果做量测更新。<strong>感觉其实可以再三角化一次</strong></p></li>
 </ul>
 <h2 id="问题">问题</h2>
-<p>1）如果相机的位姿是用IMU产生的，观测方程求Jacobian矩阵的时候是不是可以使其对相机位姿有偏导数？</p>
+<p>1）如果相机的位姿是用IMU产生的，观测方程求Jacobian矩阵的时候是不是可以使其对当前时刻的IMU位姿有偏导数？（阅读LARVIO后再阐述一下这个问题：LARVIO中增广的状态是IMU状态，观测自然对IMU位姿是有偏导数的，但这里的IMU位姿是大量在历史时刻被增广的IMU位姿，对当前时刻IMU位姿的偏导只占其中的一小部分，而且由于此状态被增广，修正作用已经体现了，再加偏导容易产生overconfident的问题。具体效果以后可以做实验看一下。）</p>
 <p>2）是否有必要把左右相机的外参加入到在线标定过程中？在这个过程中外参是怎么标定的？求观测对状态的Jacobian的时候并没有对外参求，状态中F矩阵又都是0，没起到在线标定的作用。</p>
 <p>3）零空间的问题，是不是有可能<span class="math inline">\(H_f\)</span>的左零空间中的某个向量也恰好是<span class="math inline">\(H_C\)</span>零空间中的一个向量呢？这样不是整个被消去了么？用了什么样的数学技巧来保证不会出现这种情况？</p>
 <h2 id="参考资料">参考资料：</h2>
@@ -412,7 +417,10 @@ C_{n}
     <a href="/2020/12/30/MSCKF%E7%AC%94%E8%AE%B0%EF%BC%9AMSCKF07/" rel="prev" title="MSCKF系列笔记——07论文公式推导">
       <i class="fa fa-chevron-left"></i> MSCKF系列笔记——07论文公式推导
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2021/02/06/2020%E5%B9%B4%E4%B8%AA%E4%BA%BA%E8%A7%82%E5%BD%B1%E5%8D%81%E4%BD%B3/" rel="next" title="2020年个人观影十佳">
+      2020年个人观影十佳 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -485,7 +493,7 @@ C_{n}
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -498,7 +506,7 @@ C_{n}
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">7</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
