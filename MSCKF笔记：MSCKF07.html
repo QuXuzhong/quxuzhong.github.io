@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"shisirqxz.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","width":240,"display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="MSCKF系列笔记：（Mourikis 07) 最近打算在MSCKF的框架上做一些工作，Mourikis 07年的论文算是MSCKF系列的开山之作，阅读论文和崔华坤大神的博客，从头到尾推了一下公式。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MSCKF系列笔记——07论文公式推导">
+<meta property="og:url" content="https://shisirqxz.com/MSCKF%E7%AC%94%E8%AE%B0%EF%BC%9AMSCKF07.html">
+<meta property="og:site_name" content="Qxz&#39;s Blog">
+<meta property="og:description" content="MSCKF系列笔记：（Mourikis 07) 最近打算在MSCKF的框架上做一些工作，Mourikis 07年的论文算是MSCKF系列的开山之作，阅读论文和崔华坤大神的博客，从头到尾推了一下公式。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/image-20201202211528276.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/image-20201202212225657.png">
+<meta property="article:published_time" content="2020-12-30T02:03:33.420Z">
+<meta property="article:modified_time" content="2021-02-04T14:38:52.850Z">
+<meta property="article:author" content="Qxz">
+<meta property="article:tag" content="SLAM">
+<meta property="article:tag" content="MSCKF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/image-20201202211528276.png">
+
+<link rel="canonical" href="https://shisirqxz.com/MSCKF%E7%AC%94%E8%AE%B0%EF%BC%9AMSCKF07.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>MSCKF系列笔记——07论文公式推导 | Qxz's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Qxz's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://shisirqxz.com/MSCKF%E7%AC%94%E8%AE%B0%EF%BC%9AMSCKF07.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Qxz">
+      <meta itemprop="description" content="Nobody exists on purpose.Nobody belongs anywhere.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Qxz's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MSCKF系列笔记——07论文公式推导
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-12-30 10:03:33" itemprop="dateCreated datePublished" datetime="2020-12-30T10:03:33+08:00">2020-12-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-02-04 22:38:52" itemprop="dateModified" datetime="2021-02-04T22:38:52+08:00">2021-02-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/SLAM%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">SLAM学习</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="msckf系列笔记mourikis-07">MSCKF系列笔记：（Mourikis 07)</h1>
+<p>最近打算在MSCKF的框架上做一些工作，Mourikis 07年的论文算是MSCKF系列的开山之作，阅读论文和崔华坤大神的博客，从头到尾推了一下公式。</p>
+<a id="more"></a>
+<h2 id="坐标系和状态向量定义">坐标系和状态向量定义</h2>
+<h3 id="a.坐标系定义">A.坐标系定义</h3>
+<p>世界坐标系：w系，对应ECEF坐标系，文章中称为G系</p>
+<p>地球坐标系：e系，在本文中即为w系</p>
+<p>载体坐标系：b系，对应IMU坐标系,MSCKF以及很多文章中用I系表示IMU坐标系，感觉很容易和i系混淆，太别扭了。</p>
+<p>相机坐标系：c系，至多N个，对应<span class="math inline">\(c_1\)</span>...<span class="math inline">\(c_n\)</span></p>
+<p>惯性坐标系：i系</p>
+<h3 id="b.状态向量定义">B.状态向量定义</h3>
+<p><strong>关于符号的说明：</strong></p>
+<p>由于前后整理参考了很多不同的文章，符号的表示比较乱，我也没心力都统一起来，做一些备注说明：</p>
+<ul>
+<li>关于上下标在左侧右侧的表示：纯粹是怎么方便写怎么来，<span class="math inline">\({q_w^b}\)</span>和<span class="math inline">\(_w^bq\)</span>没有任何的不同。</li>
+<li><span class="math inline">\([\theta]_{\times}\)</span>和<span class="math inline">\(\theta^{\wedge}\)</span>都是表示由向量构成的反对称矩阵，整理的过程比较繁琐，有些地方没有统一。</li>
+<li><span class="math inline">\(\tilde b_g\)</span>和<span class="math inline">\(\delta b_g\)</span>含义是一样的，都表示误差量。</li>
+<li><span class="math inline">\(C_b^w\)</span>和<span class="math inline">\(R_b^w\)</span>是一样的，都对应从b系到w系的坐标变换矩阵。</li>
+</ul>
+<h4 id="imu状态向量15维">IMU状态向量（15维）</h4>
+<p><span class="math display">\[
+{ X_{IMU}=[{}_b^w{\overline{q}^T} \quad b_g^T \quad {}^wv_b^T \quad b_a^T \quad {}^wp_b^T]^T }
+\]</span> <span class="math inline">\({}_b^w{\overline{q}^T}\)</span>：从<strong>w系到b系</strong>的坐标系旋转对应的四元数，对应的坐标变换矩阵为<span class="math inline">\(R_b^w\)</span>。（<span class="math inline">\(\overline{q}\)</span>代表单位四元数）。JPL四元数的提出是为了解决四元数到旋转矩阵映射的homomorphy性，原MSCKF体系中都使用JPL四元数进行推导，因此对应文章中的<span class="math inline">\(_G^I\overline q\)</span>。但考虑传统惯导系统中很多地方都用Hamilton四元数推导方程，本文中推导使用的均为Hamilton 四元数，即ijk=-1，且取四元数的最后一维为常数项<span class="math inline">\(q_0\)</span>。同时为了让Hamilton四元数到旋转矩阵的映射也是Homomorphy的，<span class="math inline">\(^w_bq\)</span>对应了从上标到下标的坐标系旋转，即为从下标到上标的坐标系变换，这样<span class="math inline">\(C(^w_bq)\)</span>就对应了<span class="math inline">\(R_b^w\)</span>。</p>
+<p><span class="math inline">\({}^wv_b^T\)</span>：载体系的速度在w系下的投影，<strong>导航系统里的速度实际上都是地速，也就是说是载体相对地球的速度在w系下的投影，在本系统中w系就是地球坐标系</strong></p>
+<p><span class="math inline">\({}^wp_b^T\)</span>：b系的位移在w系下的投影，对应速度，得到的位移也是相对初始时刻地球坐标系的位移</p>
+<p><span class="math inline">\(b_g^T,b_a^T\)</span>：对应陀螺和加速度计的零偏，<strong>是随机游走序列，由高斯白噪声<span class="math inline">\(n_{wg},n_{wa}\)</span>驱动</strong></p>
+<h4 id="相机的位姿6n维">相机的位姿（6N维）</h4>
+<p>相机的位姿主要包含<span class="math inline">\({}_{c_i}^{w} \overline{q}^T, {}^wp_{c_i}^T\)</span>，物理意义的对应关系与1中一致，只相当于把上面的b系换成了c<sub>i</sub>坐标系。在处理过程中，最多只将N个时刻的相机位姿放入状态方程中进行优化。</p>
+<h4 id="误差状态向量">误差状态向量</h4>
+<p>MSCKF在预测和更新时实际上处理的对象是<u>误差状态向量</u>，而非上面的向量，主要原因包括以下几点：</p>
+<ul>
+<li>四元数表示旋转有冗余，转换成旋转角恰好有3个自由度。</li>
+<li>误差的均值为0，更靠近初值，线性化点较准确，可以忽略二阶以上的量</li>
+<li>误差的运动很慢</li>
+</ul>
+<p>IMU状态转换成误差状态向量为： <span class="math display">\[
+{\tilde{X} }_{IMU}^{15}=[\delta{ {\theta_b}^T} \quad {\tilde{b}_g^T} \quad { { }^w\tilde{v}_b^T} \quad {\tilde{b}_a^T} \quad { { }^w\tilde{p}_b^T}]^T
+\]</span> 其中<span class="math inline">\(\delta{ {\theta_b}^T}\)</span>对应误差四元数到旋转角的转换，<u>这个角定义在b系中</u>。</p>
+<p>假如旋转角表示为<span class="math inline">\(\vec n \theta\)</span>,其中<span class="math inline">\(\vec n\)</span>表示旋转轴，对应一个单位向量。四元数到旋转角的变换公式为 <span class="math display">\[
+q=cos \frac\theta2+\vec nsin\frac\theta2
+\]</span> 对应扰动形式<span class="math inline">\(\delta q \to \vec n\delta \theta\)</span>，由于<span class="math inline">\(cos \frac{\delta\theta}2 \simeq 1\)</span>，<span class="math inline">\(sin \frac{\delta\theta}2 \simeq \frac{\delta\theta}2\)</span>，得到 <span class="math display">\[
+\delta q \simeq [\vec n\frac{\delta \theta}2，1]
+\]</span></p>
+<p>对应地，相机的位姿也表示成了误差的形式 <span class="math display">\[
+\tilde{X}_k^{ (15+6N) }=[\tilde{X}_{IMU_k} \quad \delta \theta_{c_1} \quad { }^w\tilde{p}_{c_1}\quad...\quad \delta\theta_{c_i} \quad  { }^w\tilde{p}_{c_i} ]
+\]</span> 同理，<span class="math inline">\(\delta{ {\theta_{c_i} }^T}\)</span>对应了<span class="math inline">\(c_i\)</span>系下的误差角。本文的推导中认为误差角或者说扰动是发生在b系和c系，而非w系，因此旋转对应的扰动是右扰动，即为<span class="math inline">\(^w_bq * \delta ^b_{b&#39;}q\)</span></p>
+<h2 id="连续系统建模">连续系统建模</h2>
+<p>MSCKF的推导中出现了大量的状态方程，总体来说其实就两类：导航方程和误差状态方程。前者的意义是用于解算pvq，其解算过程就是普通的导航方程递推的方式（文章里说用了五阶龙格库塔法），而误差状态方程是真正用来进行EKF递推的系统状态方程。修正的作用体现在每次通过观测求得卡尔曼增益后，在通过导航方程积分得到PVQ的基础上再加上误差状态方程推导的<span class="math inline">\(\delta\)</span>值进行修正，作为下一步导航方程积分的值。</p>
+<h3 id="导航方程">导航方程</h3>
+<p>惯导系统相当于是按照地球坐标系进行编排的捷联系统，其导航方程原理见捷联惯性导航技术第二版P19，基本的导航方程为： <span class="math display">\[
+\left\{
+\begin{array} {**lr**}
+_b^w\dot{\overline q}(t)=\frac12 \Omega(\omega(t)){}_b^w
+\overline q &amp; \\ 
+\dot{b_g}(t)=n_wg(t) \\
+^w\dot v_b(t)={}^wa(t)\\
+\dot b_a(t)=n_{wa}(t)\\
+^wp_b(t)={}^wv_b(t)
+\end{array} 
+\right.
+\]</span> <span class="math inline">\(\omega(t)\)</span>对应的是<span class="math inline">\(\omega_{w b}^b\)</span>，<strong>表示<span class="math inline">\(\omega\)</span>系到b系的角速度在b系下的大小。</strong>a(t)对应的是地速在w系下的导数，这两个量都不是直接观测量，计直接观测量为<span class="math inline">\(\omega_m\)</span>和<span class="math inline">\(f_m\)</span>，测量模型为： <span class="math display">\[
+\omega_m=\omega_{ib}^b=\omega_{wb}^b+R_w^b \omega_{iw}^w+b_g+n_g
+\]</span></p>
+<p><span class="math display">\[
+f_m=f^b=R_w^b[a^w-g^w+2\omega_{iw}^w \times v_b^w]+b_a+n_a
+\]</span></p>
+<p>将测量模型代入导航方程得到 <span class="math display">\[
+\left\{
+\begin{aligned}
+{}^w_b \dot{\hat{\bar{q}}} &amp;= \frac{1}{2} \Omega(\hat{\omega})_{b}^{w} \hat{\bar{q}}, \\
+\dot{\hat{\mathbf{b}}}_{g} &amp;= 0_{3 \times 1} \\
+{}^w \dot{\hat{\mathbf{v}}}_{I} &amp;= \mathbf{R}_b^w \hat{\mathbf{a}}-2\left\lfloor\omega_{G} \times\right\rfloor^{w} \hat{\mathbf{v}}_{I}-\left\lfloor\omega_{G} \times\right\rfloor^{2} \  {}^w \hat{\mathbf{p}}_{I}  +  {}^{w} \mathbf{g} \\
+\dot{\hat{\mathbf{b}}}_{a} &amp;= \mathbf{0}_{3 \times 1}, \\
+{}^{w} \dot{\hat{\mathbf{p}}}_{I} &amp;= {}^{w} \hat{\mathbf{v}}_{I}
+\end{aligned}
+\right.
+\]</span> 对式中变量的说明：</p>
+<ul>
+<li><p>其中<span class="math inline">\(n_a,n_g\)</span>均为零均值高斯白噪声。</p></li>
+<li><p>显然，观测量都应该是在载体系中测得的，相对惯性系的大小</p></li>
+<li><p>实际方程中的<span class="math inline">\(\omega\)</span>和a对应的都是b系相对世界系的大小（a原理上是相对地球系的大小，但本模型中，e系和w系是统一的。）</p></li>
+<li><p>对应<span class="math inline">\([\vec n \sin\frac{\theta}2，\cos \frac{\theta}2]\)</span>形式的四元数，微分方程形式见惯性导航P253，把四元数的常数项放在最后一维或第一维其实只是个表示方法问题，没什么</p></li>
+</ul>
+<p><span class="math display">\[
+\Omega(\omega(t))=\begin{pmatrix}
+    -[\omega]_{\times} &amp; \omega\\
+    -\omega^T &amp; 0
+\end{pmatrix}=R([w\quad0]^T)
+\]</span></p>
+<ul>
+<li><span class="math inline">\(\hat a,\hat \omega\)</span>分别对应了<span class="math inline">\(a_m-b_a,\omega_m-b_g\)</span>，其详细含义见附录A。从这个式子里就可以看出应当是先积分再用误差状态修正，因为积分时使用的<span class="math inline">\(\hat a\)</span>是没有考虑<span class="math inline">\(\delta b_a,n_a\)</span>的作用的，也就对应了附录A中提出的Nominal值的概念，那么积分使用的PVQ也就应该是没有加入修正的项，积分后再加上误差状态，达到考虑了<span class="math inline">\(\delta b_a,\delta b_g,n_a,n_g\)</span>以后的修正作用。</li>
+</ul>
+<hr />
+<h3 id="以误差量为状态的递推方程"><strong>以误差量为状态的递推方程</strong></h3>
+<p>在上述导航方程的基础上，取系统的状态为前述的<span class="math inline">\(\tilde X\)</span>，系统中的噪声项为 <span class="math display">\[
+n=[n_g\quad n_{wg} \quad n_a \quad n_{wa}]^T
+\]</span> 其中n<sub>g</sub>为角速度的状态噪声，n<sub>wg</sub>为角速度零偏的状态噪声，以此类推。得到基于误差状态的MSKCF系统的状态方程</p>
+<p><span class="math display">\[
+\dot{\widetilde{X}}=F\widetilde{X}+Gn
+\]</span> 其中： <span class="math display">\[
+\mathbf{F}=\left[\begin{array}{lllll}
+-\lfloor\hat{\omega} \times\rfloor &amp; -\mathbf{I}_{3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} \\
+\mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} \\
+-\mathbf{R}_{b}^{w}\lfloor\hat{\mathbf{a}} \times\rfloor &amp; \mathbf{0}_{3 \times 3} &amp; -2\left\lfloor\boldsymbol{\omega}_{G} \times\right\rfloor &amp; -\mathbf{R}_{b}^{w} &amp; -\left\lfloor\boldsymbol{\omega}_{G} \times\right\rfloor^{2} \\
+\mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} \\
+\mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{I}_{3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3}
+\end{array}\right]
+\label{F}
+\]</span></p>
+<p><span class="math display">\[
+\begin{equation}
+\mathbf{G}=\left[\begin{array}{cccc}
+-\mathbf{I}_{3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} \\
+\mathbf{0}_{3 \times 3} &amp; \mathbf{I}_{3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} \\
+\mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} &amp; -\mathbf R_b^w &amp; \mathbf{0}_{3 \times 3} \\
+\mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{I}_{3} \\
+\mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 3}
+\end{array}\right]
+\end{equation}
+\]</span></p>
+<p>上面的式子其实是利用惯导的测量构建了角速度和加速度的估计值，状态实际上是对应估计值和真实值之间的误差。</p>
+<p>其中F为15 <em>15矩阵，G为15 </em> 12矩阵，矩阵中各个元素的具体推导见附录A。</p>
+<h2 id="离散化实现">离散化实现</h2>
+<p>根据原论文的阐述，其实这个离散化并不是真正把整个方程都离散化掉了，IMU的状态部分是通过连续系统的卡尔曼滤波实现的。也就是说误差状态是通过数值积分的方法更新的。<strong>采用这种方式更新的原因，我的理解是由于使用了多状态约束，只有当一个特征点被认为稳定的情况下，才会用于产生一个多状态的约束，也就对应生成了一次观测，那么两次观测之间的时间间隔就可能比帧间隔要长得多，这种情况下如果完全离散化递推等于是一次线性化，会带来比较大的误差</strong></p>
+<p>然而相机的位姿是不连续的，为此必须要有离散的状态转移矩阵和协方差矩阵。故此协方差矩阵按下面的形式进行了分块： <span class="math display">\[
+{P}_{k \mid k}=\left[\begin{array}{ll}
+{P}_{I I_{k \mid k}} &amp; {P}_{I C_{k \mid k}} \\
+{P}_{I C_{k \mid k}}^{T} &amp; {P}_{C C_{k \mid k}}
+\end{array}\right]
+\]</span> 其中<span class="math inline">\(P_{II}\)</span>部分对应的是IMU的15维状态，而<span class="math inline">\(P_{CC}\)</span>对应的是相机的位姿状态。<span class="math inline">\(P_{II}\)</span>的更新是通过数值积分进行的，也就是连续系统的卡尔曼滤波的实现方式。其微分方程为： <span class="math display">\[
+\dot{\mathbf{P}}_{I I}=\mathbf{F} \mathbf{P}_{I I}+\mathbf{P}_{I I} \mathbf{F}^{T}+\mathbf{G} \mathrm{Q}_{\mathrm{IMU}} \mathbf{G}^{T}
+\]</span> 此方程的推导见附录B（不太明白这个方程为什么叫 Lyapunov equation)。要成功更新总的P阵，就需要知道<span class="math inline">\(\Phi(t_k+T,t)k\)</span>，求解同样按照数值积分的方法，微分方程为： <span class="math display">\[
+\dot{\Phi}\left(t_{k}+\tau, t_{k}\right)=\mathbf{F} \Phi\left(t_{k}+\tau, t_{k}\right), \quad \tau \in[0, T
+\]</span> 得到离散化的状态转移矩阵后，就可以用来更新总的P阵： <span class="math display">\[
+\mathbf{P}_{k+1 \mid k}=\left[\begin{array}{cc}
+\mathbf{P}_{I I_{k+1 \mid k}} &amp; \Phi\left(t_{k}+T, t_{k}\right) \mathbf{P}_{I C_{k \mid k}} \\
+\mathbf{P}_{I C_{k \mid k}}^{T} \Phi\left(t_{k}+T, t_{k}\right)^{T} &amp; \mathbf{P}_{C C_{k \mid k}}
+\end{array}\right]
+\]</span> 注意这里的k和k+1对应的并不是两次IMU之间的递推间隔，而是指两次量测更新之间的间隔，这个方程一些不好理解的地方:</p>
+<ul>
+<li>参看附录B就可以发现，连续系统的卡尔曼滤波不会有<span class="math inline">\(P_{k+1|k}\)</span>的概念，通过微分方程积分得到的就是P(t)，那么这里的<span class="math inline">\(P_{II_{k+1|k}}\)</span>是怎么来的呢？我认为它的含义其实是这样：<strong>k+1时刻IMU状态没有被观测修正的情况下的<span class="math inline">\(P(t_{k+1})\)</span>，我们认为它是在k时刻的状态的基础上积分出来的，所以会有k+1|k这个概念。</strong>由于作者并没有开源对应的代码，不清楚具体实现的时候是否采用了连续卡尔曼滤波的方式。但是后来依照这篇文章实现的双目MSKCF-VIO中并没有用连续卡尔曼滤波，只在IMU状态递推的过程中用了龙格库塔法。</li>
+<li><span class="math inline">\(P_{CC_{k|k}}\)</span>，这部分状态全都是在k时刻。我认为是由于关键帧的位姿不存在状态递推，<span class="math inline">\(P_{k+1|k}\)</span>和<span class="math inline">\(P_{k|k}\)</span>是一回事</li>
+<li>这里的<span class="math inline">\(P_{k+1|k}\)</span>用于计算产生K(k+1)来修正。</li>
+</ul>
+<h2 id="状态扩增augmentation">状态扩增(augmentation)</h2>
+<p>新加入一帧的相机位姿时，要进行状态和协方差增广的处理。这里涉及两个问题：相机的误差状态是怎么来的？协方差增广的形式是怎么样的？</p>
+<h3 id="误差状态的产生">误差状态的产生</h3>
+<p>按照文章中的说法，新的相机位姿是利用IMU位姿进行估计的，即 <span class="math display">\[
+_{c}^{w} \hat{\bar{q}}={ }_{b}^{w} \bar{q} \otimes_{c}^{b}{\bar{q}}\quad \text { and } \quad{ }^{w} \hat{\mathbf{p}}_{c}={ }^{w} \hat{\mathbf{p}}_{b}+\mathbf R_b^w * {}^b\mathbf{p}_{c}
+\]</span> 通过这种方式可以产生一个估计值，我们认为它对应了nominal state，另一方面，通过相机的特征匹配和PnP也可以计算拿出一个当前帧的相机位姿，我们认为它对应了true-state，二者按附录A中的方式来计算一个误差值。</p>
+<h3 id="协方差矩阵的增广">协方差矩阵的增广</h3>
+<p>状态扩维后协方差矩阵也需要对应地扩维，扩维的方式实际上也用了一阶的线性化近似。假设旧的状态只有IMU状态，误差状态向量为<span class="math inline">\(\tilde X_{imu}\)</span>（由于各帧的位姿之间没有耦合关系，这样假设对推导没有任何影响），新加入的相机位姿对应的误差状态为<span class="math inline">\(\tilde X_{c}\)</span>，用<span class="math inline">\(P_{k|k}\)</span>表示旧的协方差矩阵，用<span class="math inline">\(P_{k|k}^{aug}\)</span>表示增广后的协方差，则增广的协方差的形式为： <span class="math display">\[
+P_{k|k}^{aug}=E
+\left[\begin{matrix}\delta{\tilde X_{imu}}\\
+\delta{\tilde{X_c}}\end{matrix}\right]
+\left[\delta{\tilde X_{imu}^T \quad \delta{\tilde X_{c}^T}}\right]
+\]</span> 进行一阶线性化近似的过程，即<span class="math inline">\(\delta{\tilde{X_c}}=J \bullet \delta{\tilde X_{imu}}\)</span>，那么上面的式子就可以在原本的协方差矩阵的基础上增广为： <span class="math display">\[
+P_{k|k}^{aug}=
+\left[\begin{array}{c}
+\mathbf{I}_{6 N+15} \\
+\mathbf{J}
+\end{array}\right] \mathbf{P}_{k \mid k}\left[\begin{array}{c}
+\mathbf{I}_{6 N+15} \\
+\mathbf{J}
+\end{array}\right]^{T}
+\]</span> 这个增广过程在很多地方有图形化的描述，邱博士的LARVIO的论文中也表示得很全。在这里借用下崔神的文章里的图：</p>
+<figure>
+<img src="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/image-20201202211528276.png" alt="image-20201202211528276" /><figcaption aria-hidden="true">image-20201202211528276</figcaption>
+</figure>
+<p>其中J矩阵为 <span class="math display">\[
+\mathbf{J}=\left[\begin{array}{cccc}
+\mathbf{R}_b^c &amp; \mathbf{0}_{3 \times 9} &amp; \mathbf{0}_{3 \times 3} &amp; \mathbf{0}_{3 \times 6 N} \\
+\left\lfloor\mathbf-{R}_b^w \bullet {}^b\mathbf{p}_{c} \times\right\rfloor &amp; \mathbf{0}_{3 \times 9} &amp; \mathbf{I}_{3} &amp; \mathbf{0}_{3 \times 6 N}
+\end{array}\right]
+\]</span> 增广的误差状态对IMU状态的Jacobian矩阵的求导具体方法见附录C,原文中<span class="math inline">\(\mathbf{C}(_I^C{\overline q})\)</span>实际上就是<span class="math inline">\(R_b^c\)</span>,<span class="math inline">\(\left\lfloor\mathbf{C}_{\hat{q}}^{T} \right\rfloor\)</span>其实就是<span class="math inline">\(R_b^w\)</span>,论文里这一套表示方法真是看得人脑壳疼。这里推导的偏导多了个负号，应该是原文的公式有错误。</p>
+<h2 id="测量模型">测量模型</h2>
+<p>本文定义的测量模型如下图，<span class="math inline">\(f_1,f_2...\)</span>为路标点，通过三角化确定了这些点的3D位置。<span class="math inline">\(T_1,T_2...\)</span>为相机的位姿。</p>
+<figure>
+<img src="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/image-20201202212225657.png" alt="观测模型示意图" /><figcaption aria-hidden="true">观测模型示意图</figcaption>
+</figure>
+<h3 id="观测的预测和残差">观测的预测和残差</h3>
+<p>本文的重要贡献就是为更新状态递推提供了有效的观测模型，也就是说，有效定义了观测的残差，即是重投影误差。一般认为各个相机位姿的噪声是相互独立的，因此其协方差矩阵也是独立定义的。文章定义相机观测的分类是按照跟踪成功的特征点进行划分的，而不是按照相机位姿划分。</p>
+<ul>
+<li>在卡尔曼滤波中，状态的修正描述为下面的形式 <span class="math display">\[
+\hat{X}_{k+1|k+1}=\hat{X}_{k+1|k}+Kr
+\]</span> 其中<span class="math inline">\(r=Z_{k+1}-H\hat{X}_{k|k}\)</span>即为观测的残差（residual）（非线性系统完全类似） <span class="math display">\[
+r=HX_{k}+n-H\hat{X}_{k|k}=H\tilde X+n
+\]</span></li>
+</ul>
+<p>对应本文的系统模型，会有一个非常容易混淆的地方，即<span class="math inline">\(\tilde X\)</span>到底对应什么？由于选择的状态是误差状态，观测也应该是一个误差，这个误差就是重投影误差。但是原文献中一会将<span class="math inline">\(\tilde X\)</span>表述为状态的误差，一会表述为误差状态，又将重投影误差表述为了观测的残差r而非观测的预测值，崔神的文章里推导的时候这个问题没说清楚，后续求Jacobian的时候公式描述不太对。按照我的理解问题的特殊性在于误差状态的真实值是0，即对应上面的<span class="math inline">\(X_k=0\)</span>，那么<span class="math inline">\(\tilde X\)</span>既是误差状态，也可以认为是状态误差，同样，我们认为观测值是0，那么计算得到的重投影误差既可以作为观测的预测值，也可以认为是观测的残差。</p>
+<p>论文中认为观测残差为重投影误差，其定义如下： <span class="math display">\[
+\mathbf{r}_{i}^{(j)}=\mathbf{z}_{i}^{(j)}-\hat{\mathbf{z}}_{i}^{(j)}
+\]</span></p>
+<p>其中<span class="math inline">\(z_i^{(j)}\)</span>是第j个路标点在第i帧下对应的像素坐标，需要转换到归一化坐标系中，只取前两维，即： <span class="math display">\[
+\mathbf{z}_{i}^{(j)}=\frac{1}{^{C_{i}} Z_{j}}\left[\begin{array}{c}
+^{C_{i}} X_{j} \\
+^{C_{i}} Y_{j}
+\end{array}\right]+\mathbf{n}_{i}^{(j)}
+=\left[\begin{matrix}
+{\frac{u-c_x}{f_x}}\\
+\frac{v-c_y}{f_y}
+\end{matrix}\right]+n_i^{(j)}
+\]</span> 这里的n是在归一化坐标系下的视觉测量误差，崔神的博客里说可以根据标定的像素误差投影到归一化坐标系下来得到，论文中只是说此噪声的协方差为<span class="math inline">\(\sigma^2I\)</span>。</p>
+<p>另一方面根据投影模型，在归一化平面下点坐标的估计值为： <span class="math display">\[
+\hat{\mathbf{z} }_{i}^{(j)}=\frac{1}{ { }^{C_{i} } \hat{Z}_{j} }\left[\begin{array}{c}
+{ }^{C_{i} } \hat{X}_{j} \\
+{ }^{C_i} \hat{Y}_{j}
+\end{array}\right], \quad\left[\begin{array}{c}
+{ }^{C_{i} } \hat{X}_{j} \\
+{ }^{C_{i} } \hat{Y}_{j} \\
+{ }^{C_{i} } \hat{Z}_{j}
+\end{array}\right]=\hat {\mathbf R}_w^{C_i}
+\left({ }^{w} \hat{\mathbf{p} }_{f_{j} }-{ }^{w} \hat{\mathbf{p} }_{C_{i} }\right)
+\]</span></p>
+<p><span class="math inline">\(\hat p_{f_j}\)</span>是特征点的3D坐标，这个坐标是通过三角化过程得到的，既使用了<span class="math inline">\(z_i^{(j)}\)</span>，也使用了滤波器中估计的相机位姿（是否可以理解为，==在三角化过程中使用的相机位姿是对应时刻的修正后的相机位姿，<span class="math inline">\(\hat T+\delta T\)</span>?==）</p>
+<h3 id="jacobian计算">Jacobian计算</h3>
+<p>关于残差对状态的Jacobian求解，作者在另一篇文章中进行了推导，和崔神的博客里的形式是一致的，推导过程见附录D，我认为是有点问题的，先不管。总之得到的形式为： <span class="math display">\[
+\displaystyle
+\mathbf{r}_{i}^{(j)} \simeq \mathbf{H}_{\mathbf{X}_{i}}^{(j)} \tilde{\mathbf{X}}+\mathbf{H}_{f_\mathbf{i}}^{(j) w} \widetilde{\mathbf{p}}_{f_{j}}+\mathbf{n}_{i}^{(j)}
+\]</span> 上面的公式描述了特征点<span class="math inline">\(f_j\)</span>在相机<span class="math inline">\(c_i\)</span>的归一化坐标系下的观测残差，而每一次有观测更新的时候，会同时产生<span class="math inline">\(f_j\)</span>在若干个相机坐标系下的观测残差（这也是所谓多状态约束概念的来源），假设观测到该点的帧的集合为<span class="math inline">\(S_j\)</span>，那么对每一个<span class="math inline">\(c_i \in S_j\)</span>都得到一个残差的方程，联立起来得到总的观测残差： <span class="math display">\[
+\mathbf{r}^{(j)} \simeq \mathbf{H}_{\mathbf{X}}^{(j)} \widetilde{\mathbf{X}}+\mathbf{H}_{f}^{(j) w} \widetilde{\mathbf{p}}_{f_{j}}+\mathbf{n}^{(j)}
+\]</span> 其中<span class="math inline">\(\mathbf{R}^{(j)}=\sigma_{\mathrm{im}}^{2} \mathbf{I}_{2 M_{j}}\)</span>，因为在不同的帧中特征点的观测是相互独立的。</p>
+<p><span class="math inline">\(\hat{p}_{c_i}\)</span>是相机位姿，包含在状态计算中，而<span class="math inline">\(\hat{p_{f_i}}\)</span>的计算也和相机位姿有关，导致<span class="math inline">\(\tilde p_{f_j}和\tilde X\)</span>是相关的，因此这个形式不能直接用于EKF的量测更新，因此通过左乘一个由<span class="math inline">\(H_f\)</span>左零空间中向量构成的矩阵<span class="math inline">\(A^T\)</span>，把r投影到了<span class="math inline">\(H_f\)</span>的左零空间中，得到： <span class="math display">\[
+\begin{aligned}
+\mathbf{r}_{o}^{(j)} &amp;=\mathbf{A}^{T}\left(\mathbf{z}^{(j)}-\hat{\mathbf{z}}^{(j)}\right) \simeq \mathbf{A}^{T} \mathbf{H}_{\mathbf{X}}^{(j)} \tilde{\mathbf{X}}+\mathbf{A}^{T} \mathbf{n}^{(j)} \\
+&amp;=\mathbf{H}_{o}^{(j)} \widetilde{\mathbf{X}}^{(j)}+\mathbf{n}_{o}^{(j)}
+\end{aligned}
+\]</span> r的维度是<span class="math inline">\(2M_j\)</span>(<span class="math inline">\(M_j\)</span>为观测次数,即观测到该特征点的帧数)，H<sub>f</sub>的维度就是2$M_j<span class="math inline">\(3且列满秩，rank=3,因此其左零空间的维数为2\)</span>M_j<span class="math inline">\(-3，也就是说\)</span>r_o<span class="math inline">\(是2\)</span>M_j$-3维的向量。考虑到A是个正交矩阵，有： <span class="math display">\[
+E\left\{\mathbf{n}_{o}^{(j)} \mathbf{n}_{o}^{(j) T}\right\}=\sigma_{\mathrm{im}}^{2} \mathbf{A}^{T} \mathbf{A}=\sigma_{\mathrm{im}}^{2} \mathbf{I}_{2 M_{j}-3}
+\]</span> 文章中指出A矩阵的计算使用了Givens Rotation，包括后面的QR分解也是。Givens Rotation的说明见附录E。</p>
+<h2 id="ekf的更新策略">EKF的更新策略</h2>
+<p>EKF更新会被以下两种情况触发：</p>
+<ol type="1">
+<li>当一个之前被连续跟踪到的特征在当前帧不可见时，会利用所有这个特征点的观测对位姿做一次更新，这也是最常见的EKF更新情况</li>
+<li>如果状态向量中添加的相机帧位姿要超过设定的阈值<span class="math inline">\(N_{max}\)</span>时，要剔除一部分旧的相机位姿误差状态。会一次性均匀选取N/3数量的帧丢掉，在剔除之前这些帧间共视的所有的特征点都会用于生成观测并触发EKF的更新，从而有效利用这些信息来定位（因为直接剔除的话会有许多没有触发更新条件的特征点的观测没有用到），之后再将这些帧丢弃。<strong>本文提到了一个trick，即永远保留最早的帧的位姿信息，因为这一帧与后面帧的视差足够大</strong>。</li>
+</ol>
+<p>对应上面的情况2，不难想到这个时候的观测矩阵维数会非常高，为此通过QR分解来简化计算，原论文在这个地方符号描述有点问题，总之对L个特征点<span class="math inline">\(f_j\)</span>，(j=1,2,...L)得到总的观测方程为： <span class="math display">\[
+\mathbf{r}_{o}=\mathbf{H}_{\mathbf{o}} \tilde{\mathbf{X}}+\mathbf{n}_{o}
+\]</span> 对H矩阵进行QR分解： <span class="math display">\[
+\begin{gather*}
+\mathbf{r}_{o} =\left[\begin{array}{ll}
+\mathbf{Q}_{1}  \mathbf{Q}_{2}
+\end{array}\right]\left[\begin{array}{c}
+\mathbf{T}_{H} \\
+\mathbf{0}
+\end{array}\right] \tilde{\mathbf{X}}+\mathbf{n}_{o} \\
+\left[\begin{array}{l}
+\mathbf{Q}_{1}^{T} \mathbf{r}_{o} \\
+\mathbf{Q}_{2}^{T} \mathbf{r}_{o}
+\end{array}\right]=\left[\begin{array}{c}
+\mathbf{T}_{H} \\
+\mathbf{0}
+\end{array}\right] \tilde{\mathbf{X}}+\left[\begin{array}{l}
+\mathbf{Q}_{1}^{T} \mathbf{n}_{o} \\
+\mathbf{Q}_{2}^{T} \mathbf{n}_{o}
+\end{array}\right]
+\end{gather*}
+\]</span> 这里各变量的维数为：</p>
+<ul>
+<li><span class="math inline">\(r_o:d \times 1, \quad d = \Sigma_{j=1}^{L}(2 M_j - 3)\)</span>，L为特征点数，<span class="math inline">\(M_j\)</span>为第 j 个特征点的观测帧数。</li>
+<li><span class="math inline">\(H_o:d \times r,\quad r = (15+6N)\)</span>，r 为误差状态维数，N为状态中保存的相机位姿数。</li>
+<li><span class="math inline">\(\delta X:r = 15+6N\)</span></li>
+<li><span class="math inline">\(Q_1:d \times r\)</span></li>
+<li><span class="math inline">\(Q_2:d \times (d-r)\)</span></li>
+<li><span class="math inline">\(T_H:r \times r\)</span></li>
+<li><span class="math inline">\(0:(d-r) \times r\)</span></li>
+</ul>
+<p>且由于<span class="math inline">\(H_o = Q_1 \times T_H + Q_2 \times 0 = Q_1 \times T_H\)</span>，则<span class="math inline">\(H_o\)</span>的每一列均为<span class="math inline">\(Q_1\)</span>的线性组合，而与<span class="math inline">\(Q_2\)</span>线性无关。<u><strong>而论文中提到 Q1 Q2 are unitary matrices whose columns form bases for the range and nullspace of H<sub>X</sub>，不太能理解这里是什么意思？？？</strong></u></p>
+<p>这样的话方程可以简化为与<span class="math inline">\(\tilde X\)</span>同维，即： <span class="math display">\[
+\mathbf{r}_{n}=\mathbf{Q}_{1}^{T} \mathbf{r}_{o}=\mathbf{T}_{H} \tilde{\mathbf{X}}+\mathbf{n}_{n}
+\]</span> 这样的话噪声协方差矩阵变成了<span class="math inline">\(\mathbf{R}_{n}=\mathbf{Q}_{1}^{T} \mathbf{R}_{o} \mathbf{Q}_{1}=\sigma_{\mathrm{im}}^{2} \mathbf{I}_{r}\)</span>，更新时的卡尔曼增益变成了： <span class="math display">\[
+\mathbf{K}=\mathbf{P} \mathbf{T}_{H}^{T}\left(\mathbf{T}_{H} \mathbf{P} \mathbf{T}_{H}^{T}+\mathbf{R}_{n}\right)^{-1}
+\]</span> 状态的修正量表示为 <span class="math display">\[
+\Delta X=Kr_n
+\]</span> 协方差矩阵的更新为： <span class="math display">\[
+P_{k+1 \mid k+1}=\left(I_{\xi}-K T_{H}\right) P_{k+1 \mid k}\left(I_{\xi}-K T_{H}\right)^{T}+K R_{n} K^{T}
+\]</span> 计算<span class="math inline">\(T_H\)</span>和<span class="math inline">\(r_n\)</span>的时间复杂度为O(<span class="math inline">\(r^2d\)</span>)，P阵更新的时间复杂度为<span class="math inline">\(O(\xi^3)\)</span></p>
+<h2 id="问题">问题</h2>
+<ol type="1">
+<li>关于离散化的理解</li>
+<li>IMU的位姿是一直在递推的，每次修正后会用估计值加上状态向量中的误差状态进行继续递推吗？对于相机的位姿，不存在递推的方程，那么这个误差量是怎么处理的？比如k时刻估计出的相机位姿，在k+n时刻估计到了一个新的误差，是要把这个误差加到相机的位姿里做更新？还是说等到这一帧滑出了窗口再把这个位姿固定下来。</li>
+<li>扩维在什么时候做？新加入一帧就扩维的话滑动窗必须足够长才可能等到有观测产生吧。如果是挑关键帧扩维，关键帧的筛选依据又是什么？</li>
+<li>相机的误差状态是怎么生成的？</li>
+<li>增广状态对IMU状态的偏导</li>
+<li>观测噪声怎么设置的，又是怎么对应的？</li>
+<li>文章里面指出如果观测到一个特征点的所有共视帧都在滑窗中时，MSCKF的观测模型是最优的，这个最优是怎么理解的。</li>
+<li>LARVIO特征点扩维的时候P矩阵的处理，Jacobian项是否均为0</li>
+<li>四元数左右扰动对于方程的影响。07中使用的是左扰动，本文和其他参考资料使用的是右扰动，左右扰动对于四元数微分方程和误差状态四元数微分方程的影响。</li>
+<li>文章里对旋转角及其误差状态<span class="math inline">\(\theta_b,\theta_c,\delta \theta_b,\delta \theta_c\)</span>的定义，它们分别都定义在哪个坐标系下，以及相应的扰动<span class="math inline">\(\delta R\)</span>的正负。</li>
+</ol>
+<h2 id="附录">附录</h2>
+<h3 id="a.-状态方程中fg矩阵的推导">A. 状态方程中F、G矩阵的推导</h3>
+<p><span class="math display">\[
+\tilde{X}_{IMU}^{15}=[\delta{ {\theta_b}^T} \quad \tilde{b}_g^T \quad { }^w\tilde{v}_b^T \quad \tilde{b}_a^T \quad { }^w\tilde{p}_b^T]^T
+\tag{A1}
+\]</span> 首先明确下一个变量的true和nominal的含义。这两个概念在 <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1711.02508">Quaternion kinematics for the error-state Kalman lter</a> 这篇文章中的推导中反复使用。崔华坤大神在VINS论文的推导里将其称为真实值和理论值，我个人认为这样说有点误导性。true对应的可以称为真实模型，其实更应该称为理论值。而nominal对应的可以称为标称值。ture对应的是包含噪声项的测量模型，而nominal对应的是我们实际估计一个变量时要使用的值，因为我们无法得知噪声或零偏的导数特性，所以我们只能将这两项从理论值里去掉。因此两者之间的差别就对应了误差项，例如<span class="math inline">\(\delta \omega\)</span>。用含下标t的变量表示true，有hat的变量表示nominal（<span class="math inline">\(b_a,b_g\)</span>都应该是带帽的估计值，不想敲了）。对于角速度而言： <span class="math display">\[
+\begin{gather*}
+\omega_t=\omega_m-b_g-\delta b_g-n_g\\
+\hat \omega=\omega_m-b_g\\
+\delta \omega=\omega_t-w=-\delta b_g-n_g
+\end{gather*}
+\tag{A2}
+\]</span> 在推导微分方程时，如果要使用角速度，我们只能根据测量值<span class="math inline">\(\omega_m\)</span>和估计的零偏<span class="math inline">\(b_g\)</span>来进行计算，因此只能使用<span class="math inline">\(\hat \omega\)</span>。注意这里的<span class="math inline">\(\omega_m\)</span>并不是真正的陀螺仪测量值，陀螺仪只能测出相对世界坐标系的旋转角速度，但是在不同的导航方程中，定义的参考坐标系是不一样的，这个时候我们要求得的角速度是<span class="math inline">\(\omega_{\omega b}^b\)</span>，必须进行一定的转换，为了方便统一表示我们将估计值中除了零偏以外的部分统称为<span class="math inline">\(\omega_m\)</span>，其他的量也是如此。其他变量的误差项构建方式为：</p>
+<ul>
+<li><p>四元数：<span class="math inline">\(q_t=\hat q\otimes\delta q\)</span>，正如开始所说，对应了载体系系的旋转，即四元数状态的递推方程为 <span class="math display">\[
+q_{b_{k+1}}^{w}=q_{b_{k}}^{w} \otimes \int_{t \in[k, k+1]} \dot{q}_{t} d t
+\tag{A3}
+\]</span> <span class="math inline">\(q_{b_k}^w\)</span>对应的是从w系到b<sub>k</sub>系的旋转的四元数描述。那么误差方程实际上就是<span class="math inline">\(q_b^w=q^w_{b&#39;}q^{b&#39;}_b\)</span></p></li>
+<li><p>旋转矩阵：<span class="math inline">\(R_t=\hat R\otimes\delta R=Rexp(\delta \theta^{\wedge})\)</span>，这里有一个左扰动还是右扰动的问题，这个式子实际上可以表述为<span class="math inline">\(R_b^w=R_{b&#39;}^wR_b^{b&#39;}\)</span>，其中<span class="math inline">\(\delta R=R^{b&#39;}_b\)</span>，这种情况下我们认为扰动是发生在b系下，即估计的b系不准确。如果是<span class="math inline">\(R_b^w=R_{w&#39;}^{w}R_b^{w&#39;}\)</span>，则认为是估计的w系不准确。</p></li>
+<li><p>加速度、角速度、速度和位移都是加性的，即<span class="math inline">\(x_t=\hat x+\delta x\)</span></p></li>
+</ul>
+<h4 id="角度微分方程">1）角度微分方程</h4>
+<p>根据误差状态向量中的说明，已知存在关系： <span class="math display">\[
+\delta q \simeq [\vec n\frac{\delta \theta}2，1]\tag{a1}
+\]</span> 角度误差的微分方程就要从四元数的微分方程出发进行推导，这部分推导主要参考了Quaternion kinematics for the error-state Kalman lter P58页的部分。</p>
+<p>根据四元数的微分方程有（注意这里的<span class="math inline">\(\omega\)</span>实际上进行了扩维，四元数的实部为0） <span class="math display">\[
+\begin{aligned}
+\dot{\mathrm{q}}_{t} &amp;=\frac{1}{2} \mathrm{q}_{t} \otimes \omega_{t} \\
+\dot {\hat{\mathrm{q}}} &amp;=\frac{1}{2} \hat{\mathrm{q}} \otimes \hat{\omega}
+\end{aligned}\tag{a2}
+\]</span> 考虑ture和nominal之间的关系，有 <span class="math display">\[
+\begin{gather*}
+\hat \omega=\omega_m-b_g\\
+\delta \omega=-\delta{b_g}-n_g \\
+\omega_t=\hat w+\delta\omega 
+\end{gather*}
+\tag{a3}
+\]</span> 利用两种形式来对<span class="math inline">\(\dot q_t\)</span>进行求解，即 <span class="math display">\[
+\begin{aligned}
+\dot{\mathbf{q}_{t}}=
+\frac{1}{2} \mathbf{q}_{t} \otimes \boldsymbol{\omega}_{t}
+=\frac{1}{2} \hat{\mathbf{q}} \otimes \delta \mathbf{q} \otimes \boldsymbol{\omega}_{t} \\
+\end{aligned}
+\tag{a4}
+\]</span></p>
+<p><span class="math display">\[
+\dot{\mathbf{q}_{t}}=(\hat{\mathbf{q}} \dot{\otimes} \delta \mathbf{q}) = 
+\dot{\hat{\mathbf{q}}} \otimes \delta {\mathbf{q}}+\hat{\mathbf{q}} \otimes \dot{\delta} \mathbf{q}=
+\frac{1}{2} \hat{\mathbf{q}} \otimes \hat {\boldsymbol{\omega}} \otimes \delta {\mathbf{q}}+\hat{\mathbf{q}} \otimes \dot{\delta} \mathbf{q}\tag{a5}
+\]</span></p>
+<p>联立上面两式，同时左乘q的逆，并且将<span class="math inline">\(a1\)</span>式代入，可以得到 <span class="math display">\[
+\begin{aligned}
+\left[\begin{array}{l}
+\dot{\delta} \theta\\
+0
+\end{array}\right]=\left[\begin{array}{ll}
+2 \delta{\mathrm{q}}
+\end{array}\right] &amp;=\delta \mathrm{q} \otimes \omega_{t}-\hat{\omega} \otimes \delta \mathrm{q} \\
+&amp;=[\mathrm{q}]_{R}\left(\omega_{t}\right) \delta \mathrm{q}-[\mathrm{q}]_{L}(\hat \omega) \delta \mathrm{q} \\
+&amp;=\left[\begin{array}{cc}
+-\left[\omega_{t}+\hat \omega\right]_{\times}&amp;
+\left(\omega_{t}-\hat \omega\right)  \\
+-\left(\omega_{t}-\hat \omega\right)^{\top}&amp;0
+\end{array}\right]\left[\begin{array}{c}
+\delta \theta / 2\\
+1
+\end{array}\right]+O\left(\|\delta \theta\|^{2}\right) \\
+&amp;=\left[\begin{array}{cc}
+-[2 \hat \omega+\delta \omega]_{\times}&amp;\delta \omega \\
+ -\delta \omega^{\top}&amp;0
+\end{array}\right]\left[\begin{array}{c}
+\delta \theta / 2\\
+1
+\end{array}\right]+O\left(\|\delta \theta\|^{2}\right)
+\end{aligned}\tag{a6}
+\]</span> 忽略二阶小量，于是有： <span class="math display">\[
+\dot{\delta \theta}=-[\hat{\boldsymbol{\omega}}]_{\times} \delta \boldsymbol{\theta}+\delta \boldsymbol{\omega}
+\tag{a7}
+\]</span> 即 <span class="math display">\[
+\dot{\delta} \theta=-\left[{\omega}_{m}-{b}_{g}\right]_{\times} \delta {\theta}-\delta {b_g}-n_g\tag{a8}
+\]</span> 在MSCKF原论文中，上面的状态方程中对应的角速度为<span class="math inline">\(\omega_{\omega b}^b\)</span>，其标称值要根据陀螺仪的测量值进行估计，即 <span class="math display">\[
+\hat{\omega}=\omega_{wb}^b=\omega_{ib}^b-C_w^b \omega_{iw}^w-b_{g}
+\tag{a9}
+\]</span></p>
+<h4 id="速度微分方程">2）速度微分方程</h4>
+同样按照理论模型和实际模型进行分析 <span class="math display">\[
+\begin{array}{c}
+w_{\dot{v}_{t}}={ }^w \dot{\hat{v}}+{ }^{w} \delta \dot{v} \\
+{ }^{w} \dot{\hat{v}}={ }_{b}^{w} R\left({ }^{b} a\right)={ }_{b}^{w} R\left({ }^{b} a_{m}-b_{a}\right) \\
+{ }^{w} \delta \dot{v}={ }_{b}^{w} R_{t}\left(-n_{a}-\delta b_{a}\right)
+\end{array}
+\tag{a10}
+\]</span> 其中a<sup>b</sup>是在载体系下得到的加速度的标称值，由公式8给出。下面的式子将<span class="math inline">\(_b^wR\)</span>简写为R，<span class="math inline">\(^wv\)</span>简写为<span class="math inline">\(v\)</span> $$
+<span class="math display">\[\begin{array}{c}
+\dot{v}_{\text {t}}=R_{t }\left(^b{a}_{t}\right)
+=R \exp \left(\delta\theta^{\wedge}\right)\left({a_m}-n_{a}-b_a-\delta b_a\right)\\
+=R\left(I+\delta \theta^{\wedge}\right)\left({a_m}-n_{a}-b_a-\delta b_a\right) \\
+=R\left[{a_m}-n_{a}-b_a-\delta b_a+\delta \theta^{\wedge}\left({a_m}-b_a\right)\right] \\
+
+
+\dot{\hat v}=R\hat a=R\left({a_m}-b_a\right)
+\\
+
+\delta \dot{v}=\dot{v}_{\text {t} }-\dot{v}_{ }=-R\left({a_m}-b_a\right)^{\wedge} \delta \theta-R \bullet \delta b_a-R\bullet  n_{a}
+
+\end{array}
+\tag{a11}\]</span>
+<p>$$</p>
+<p>对于(a11)的两点说明：</p>
+<ul>
+<li>公式忽略了二阶小量，<span class="math inline">\(\delta \theta^{\wedge} \bullet \delta b_a\)</span>和<span class="math inline">\(\delta \theta^{\wedge} \bullet n_a\)</span>(<u>不太确定为什么后者是一个二阶小量</u>)。</li>
+<li>用到了叉乘的性质，<span class="math inline">\(\delta \theta^{\wedge} \bullet(a_m-b_a)=-(a_m-b_a)^{\wedge} \bullet \delta \theta\)</span></li>
+</ul>
+<p>在MSCKF系统中，如果不考虑地球的自转，式中的标称值为 <span class="math display">\[
+\hat a=f^b-R_w^b[-g^w]-b_a
+\tag{a12}
+\]</span></p>
+<p>a12中的g只包含了引力加速度，这样的话<span class="math inline">\(\hat a\)</span>的计算和各状态向量是无关的，公式的形式就会比较简单。但是在原论文中是考虑了地球自转的，那么公式就变为 <span class="math display">\[
+\hat a=f^b-R_w^b[-g_l^w +\   {2\omega_{iw}^w} \times v_b^w]-b_a
+\tag{a13}
+\]</span> 这会导致两个问题：</p>
+<ul>
+<li><p><span class="math inline">\(g_l\)</span>是引力加速度减去自转引起的向心加速度得到的重力加速度，即 <span class="math display">\[
+g_l=g-[\omega_{i\omega}^\omega]_{\times}^2 \bullet p
+\tag{a14}
+\]</span> 这导致加速度的估计会和位移有耦合</p></li>
+<li><p>由于哥氏加速度的影响，加速度的计算中出现了<span class="math inline">\(\omega \times v\)</span>的项，这导致加速度的估计与速度出现了耦合</p></li>
+</ul>
+<p>此时a11对应的公式要重新进行推导，就是说必须把<span class="math inline">\(a_m\)</span>展开来推导，用论文中的<span class="math inline">\(\omega_G\)</span>来对应<span class="math inline">\(\omega_{iw}^w\)</span>，得到 <span class="math display">\[
+\dot{v_t}=R(I+\delta\theta^{\wedge})[f_b+R^T(g-[\omega_G]_{\times}^2(\hat p+\delta p)\\
+-2R^T[\omega_G]_{\times}(\hat v+\delta v)-b_a-n_a-\delta b_a]
+\]</span></p>
+<p><span class="math display">\[
+\dot{\hat v}=R[f_b+R^T(g-[\omega_G]_{\times}^2 \hat{p})-2R^T[\omega_G]_{\times}\hat v-b_a]
+\tag{a15}
+\]</span> 同样的，上面两个式子相减，并且忽略掉所有的二阶小量得到 <span class="math display">\[
+\begin{gather*}
+\delta{\dot v}=-R\{f_b+R^T(g-[\omega_G]_{\times}^2\hat p)-
+2R^T[\omega_G]_{\times}{\hat v}-b_a\}\delta{\theta^{\wedge} }\\
+-2[\omega_G]_\times\delta v-[\omega_G]_\times^2 \delta p-R\delta b_a-Rn_a
+\end{gather*}
+\tag{a16}
+\]</span> a16就可以与前面的公式F对应起来，其中<span class="math inline">\(R_b^w\)</span>对应了原论文<span class="math inline">\(C_q^T\)</span>。</p>
+<h3 id="b.-连续系统卡尔曼滤波方程">B. 连续系统卡尔曼滤波方程</h3>
+<p>只研究线性系统，其模型为 <span class="math display">\[
+\begin{array}{l}
+\dot{x}(t)=A(t) x(t)+G(t) w(t) \\
+z(t)=H(t) x(t)+v(t)
+\end{array}
+\tag{B1}
+\]</span> 噪声统计特性为： <span class="math display">\[
+\begin{array}{l}
+E[w(t)]=0 \quad E\left[w(t) w^{T}(\tau)\right]=Q(t) \delta(t-\tau) \\
+E[v(t)]=0 \quad E\left[v(t) v^{T}(\tau)\right]=R(t) \delta(t-\tau) \\
+E\left[w(t) v^{T}(\tau)\right]=0, \quad E\left[x(t) w^{T}(t)\right]=0, \quad E\left[x(t) v^{T}(t)\right]=0 t, \tau \geq t_{0} \\
+E\left[x\left(t_{0}\right)\right]=\mu_{x}\left(t_{0}\right), \quad \operatorname{Var}\left[x\left(t_{0}\right)\right]=P_{x}\left(t_{0}\right)
+\end{array}
+\tag{B2}
+\]</span> 推导分为以下三步：</p>
+<h4 id="建立等效离散方程">1）建立等效离散方程</h4>
+<p><span class="math display">\[
+\begin{array}{l}
+x(t+\Delta t)=\Phi(t+\Delta t, t) x(t)+\Gamma(t+\Delta t, t) w^{n}(t) \\
+z(t+\Delta t)=H(t+\Delta t) x(t)+v^{n}(t+\Delta t) \\
+\Phi(t+\Delta t, t) \approx I_{n}+A(t) \Delta t \\
+\Gamma(t+\Delta t, t) \approx \mathrm{G}(t) \Delta t \\
+\operatorname{Cov}\left[W^{n}(t), W^{n}(\tau)\right]=\frac{Q_{k}}{\Delta t} \delta_{k j} \\
+\operatorname{Cov}\left[V^{n}(t), V^{n}(\tau)\right]=\frac{R_{k}}{\Delta t} \delta_{k j} \quad t=t_{0}+k \Delta t, \tau=t_{0}+j \Delta t
+\end{array}
+\tag{B3}
+\]</span></p>
+<h4 id="求等效离散模型的卡尔曼滤波方程">2) 求等效离散模型的卡尔曼滤波方程</h4>
+根据下面的等效关系： <span class="math display">\[
+\begin{array}{ll}
+x_{k|k} \rightarrow x(t+\Delta t), &amp; \Phi_{k, k-1} \rightarrow \Phi(t+\Delta t, t) \\
+z_{k} \rightarrow z(t+\Delta t), &amp; \Gamma_{k, k-1} \rightarrow \Gamma(t+\Delta t, t) \\
+x_{k-1|k-1} \rightarrow x(t), &amp; H_{k} \rightarrow H(t+\Delta t) \\
+P_{k \mid k-1} \rightarrow P(t+\Delta t, t), &amp; P_{k \mid k} \rightarrow P(t+\Delta t, t+\Delta t) \\
+P_{k-1 \mid k-1} \rightarrow P(t, t), &amp; K_{k} \rightarrow {K(t+\Delta t)} \\
+Q_{k-1} \rightarrow \frac{Q(t+\Delta t)}{\Delta t}, R_{k} \rightarrow \frac{R(t+\Delta t)}{\Delta t}
+\end{array}
+\tag{B4}
+\]</span> 在上面的等效过程中，只有噪声的等效需要考虑离散化的影响，也就是说离散系统的噪声协方差会发生变化，其他的变量都是等效到某个时刻。于是得到等效离散线性系统的方程： $$
+<span class="math display">\[\begin{array}{c}
+\hat x_{k|k}=\hat{x}(t+\Delta t)=\Phi(t+\Delta t, t) \hat{x}(t)+K(t+\Delta t)[z(t+\Delta t) 
+-H(t+\Delta t) \Phi(t+\Delta t, t) \hat{x}(t)] \\
+
+K_k=K(t+\Delta t)=P(t+\Delta t, t) H^{T}(t+\Delta t)
+[H(t+\Delta t) P(t+\Delta t, t) \left.H^{T}(t+\Delta t)+\frac{R(t+\Delta t)}{\Delta t}\right]^{-1} \\
+
+P_{k|k-1}=P(t+\Delta t, t)=\Phi(t+\Delta t, t) P(t, t) \Phi^{T}(t+\Delta t, t) 
++\Gamma(t+\Delta t, t) \frac{Q(t)}{\Delta t} \Gamma^{T}(t+\Delta t, t) \\
+P_{k|k}=P(t+\Delta t, t+\Delta t)=[I-K(t+\Delta t) H(t+\Delta t)] P(t+\Delta t, t)
+\end{array}
+\tag{B5}\]</span>
+<p>$$</p>
+<h4 id="令delta-t趋于0求极限">3） 令<span class="math inline">\(\Delta T\)</span>趋于0，求极限</h4>
+<p>先求状态的微分方程： <span class="math display">\[
+\begin{aligned}
+\hat{x}(t+\Delta t)=&amp;[I+A(t) \Delta t] \hat{x}(t)+K(t+\Delta t)\{z(t+\Delta t)\\
+&amp;-H(t+\Delta t)[I+A(t) \Delta t] \hat{x}(t)\}
+\end{aligned}
+\tag{B6}
+\]</span> 减掉<span class="math inline">\(\hat x(t)\)</span>，除以<span class="math inline">\(\Delta t\)</span>，得到： <span class="math display">\[
+\dot{\hat{x}}(t)=A(t) \hat{x}(t)+K(t)[z(t)-H(t) \hat{x}(t)]
+\tag{B7}
+\]</span> 再求K(t)，<span class="math inline">\(K(t+\Delta t)\)</span>实质上是一段时间内修正作用的累积，这个累积和<span class="math inline">\(K(t)\)</span>是没有关系的，或者说我们认为t时刻修正过了，那么对应的<span class="math inline">\(K(t)\)</span>可以取0，所以: <span class="math display">\[
+\begin{aligned}
+K(t) &amp;=\lim_{\Delta t \to 0}\frac{K(t+\Delta t) }{\Delta t} \\
+&amp;=P(t+\Delta t, t) H^{T}(t+\Delta t)\left[H(t+\Delta t) P(t+\Delta t, t) H^{T}(t+\Delta t)+\frac{R(t+\Delta t)}{\Delta t}\right]^{-1} / \Delta t \\
+&amp;=P(t+\Delta t, t) H^{T}(t+\Delta t)\left[H(t+\Delta t) P(t+\Delta t, t) H^{T}(t+\Delta t) \Delta t+R(t+\Delta t)\right]^{-1}
+\end{aligned}
+\tag{B8}
+\]</span> 取极限得到： <span class="math display">\[
+K(t)=P(t) H^{T}(t) R^{-1}(t)
+\tag{B9}
+\]</span> 最后求P(t)，将 <span class="math display">\[
+\Phi(t+\Delta t, t) \approx I_{n}+A(t) \Delta t, \quad \Gamma(t+\Delta t)=G(t) \Delta t
+\tag{B10}
+\]</span> 代入2）中的方程，得到： <span class="math display">\[
+\begin{aligned}
+P(t+\Delta t, t) &amp;=[I+A(t) \Delta t] P(t+\Delta t, t)[I+A(t) \Delta t]^{T}+G(t) \Delta t \frac{Q(t)}{\Delta t} G^{T}(t) \Delta t \\
+&amp;=P(t, t)+\left[A(t) P(t, t)+P(t, t) A^{T}(t)+G(t) Q(t) G^{T}(t)\right] \Delta t
+\end{aligned}
+\tag{B11}
+\]</span> 做差取极限，得到： <span class="math display">\[
+\begin{aligned}
+\frac{P(t+\Delta t, t+\Delta t)-P(t, t)}{\Delta t}=&amp;\left[A(t) P(t, t)+P(t, t) A^{T}(t)\right.\\
+&amp;\left.+G(t) Q(t) G^{T}(t)\right]-\frac{K(t+\Delta t) H(t+\Delta t) P(t, t)}{\Delta t}
+\end{aligned}
+\tag{B12}
+\]</span> 最后得到P(t)的形式 <span class="math display">\[
+\begin{aligned}
+\dot{P}(t)=&amp; A(t) P(t)+P(t) A^{T}(t)+G(t) Q(t) G^{T}(t) \\
+&amp;-P(t) H^{T}(t) R^{-1}(t) H(t) P(t)
+\end{aligned}
+\tag{B13}
+\]</span> 对于MSCKF中的方程，有一个特殊的地方：由于IMU采用了误差状态进行更新，不存在对应的观测，或者说，观测就是0，没有噪声项，所以这些方程的推导中不会有R和H的出现，方程的推导会非常简单。</p>
+<h3 id="c.增广状态对imu状态的偏导">C.增广状态对IMU状态的偏导</h3>
+<h4 id="delta-theta_c对delta-theta_b的jacobian">1）<span class="math inline">\(\delta \theta_c\)</span>对<span class="math inline">\(\delta \theta_b\)</span>的Jacobian</h4>
+<p>原论文中姿态的四元数转换如下 <span class="math display">\[
+_{G}^{C} \hat{\bar{q}}={ }_{I}^{C} \bar{q} \otimes_{G}^{I}{\bar{q}}
+\tag{C1}
+\]</span> 按照本文开始定义的坐标系，对应写成旋转矩阵的关系就是： <span class="math display">\[
+R_w^c= R_b^c \bullet R_w^b 
+\tag{C2}
+\]</span> 接下来的问题是，我们该怎么定义这个误差量之间的求导关系，对旋转矩阵这个误差量要左乘还是右乘？对于函数y=f(x)，我们要求y对x的导数可以通过近似取<span class="math inline">\(y+\delta y=f(x+\delta x)\)</span>，这其中的<span class="math inline">\(\delta y,\delta x\)</span>与其称为误差量，不如说是变化量或者增量更合适，我们要求的是<span class="math inline">\(\delta \theta_c\)</span>对<span class="math inline">\(\delta \theta_b\)</span>的导数，这两个转角分别定义在c系和b系中，我们实际上要探求的是这样一个问题：c系转动了一个小角度，在b系和c系相对转动不变的情况下，b系要如何转动一个小角度才能满足式C2仍然成立，对上面的式子做一个变形得到： <span class="math display">\[
+R_c^w=R_b^wR_c^b\quad R_c^{w}\delta R_{c&#39;}^c=R_{b}^{w}\delta R_{b&#39;}^{b}R_{c&#39;}^{b&#39;}
+\tag{C3}
+\]</span> 我们说过b系和c系相对转动不变，于是<span class="math inline">\(R_{b&#39;}^{c&#39;}=R_b^c\)</span>，把上面的小增量用旋转角表示出来，就成了： <span class="math display">\[
+\begin{gather*}
+R_c^w(I+\delta{\theta_c}^\wedge)=R_{b}^w(I+\delta{\theta_b}^\wedge)R_c^{b}\\
+R_c^w\delta{\theta_c}^\wedge =R_b^{w} \delta{\theta_b}^\wedge R_w^{b&#39;}
+\\
+\delta{\theta_c}^{\wedge}=R_b^c \delta{\theta_b}^{\wedge}R_c^b\\
+\delta{\theta_c}^{\wedge}=(R_b^c \delta{\theta_b})^{\wedge}
+\end{gather*}
+\tag{C4}
+\]</span> <span class="math inline">\(\delta\theta_{c}，\delta\theta_{b}\)</span>分别表示从c系、b系产生的扰动，对应<span class="math inline">\(\delta R_{c&#39;}^{c}\)</span>。于是得到<span class="math inline">\(\delta{\theta_c}=R_b^c \delta{\theta_b}\)</span>，因此Jacobian为： <span class="math display">\[
+\displaystyle
+\frac{\partial\delta{\theta_c}}{\partial\delta{\theta_b}^T}=R_b^c 
+\tag{C5}
+\]</span></p>
+<ul>
+<li><p>对C4推导的一点说明：</p>
+<p>关键是要证明<span class="math inline">\(Ra^{\wedge}R^T=(Ra)^{\wedge}\)</span>，我们取 <span class="math display">\[
+R=\left[\begin{matrix}
+r_1\\r_2\\r_3
+\end{matrix}\right]
+\tag{C6}
+\]</span> 于是有： <span class="math display">\[
+\begin{gather*}
+Ra^{\wedge}R^T=
+\left[\begin{matrix}
+r_1\\r_2\\r_3
+\end{matrix}\right]a^{\wedge}
+\left[\begin{matrix}
+r_1^T &amp; r_2^T &amp; r_3^T
+\end{matrix}\right]\\
+=-\left[\begin{matrix}
+r_1\\r_2\\r_3
+\end{matrix}\right]
+\left[\begin{matrix}
+{r_1^T}^{\wedge}a &amp; {r_2^T}^{\wedge}a &amp; {r_3^T}^{\wedge}a
+\end{matrix}\right]
+\end{gather*}
+\tag{C7}
+\]</span> 考虑<span class="math inline">\(r_1{r_2^T}^{\wedge}=(-{r_2^T}^{\wedge}r_1^T)^T\)</span>，而<span class="math inline">\({r_2^T}^{\wedge}r_1^T=r_2^T\times r_1^T\)</span>,<span class="math inline">\(\times\)</span>表示向量的叉乘。R是正交矩阵，它的行向量和列向量都是单位正交基，显然<span class="math inline">\(r_2^T\times r_1^T=-r_3^T\)</span>，以此类推，C7可以转化为： <span class="math display">\[
+Ra^{\wedge}R^T=\left[\begin{matrix}
+0&amp; -r_3a &amp; r_2a\\r_3a &amp;0 &amp;-r_1a\\-r_2a &amp; r_1a &amp;0
+\end{matrix}\right]=(Ra)^{\wedge}
+\tag{C8}
+\]</span></p></li>
+</ul>
+<h4 id="delta-p_c对delta-p_b的jacobian">2)<span class="math inline">\(\delta P_C\)</span>对<span class="math inline">\(\delta P_B\)</span>的Jacobian</h4>
+<p>先给出理论上<span class="math inline">\(p_b\)</span>到<span class="math inline">\(p_c\)</span>的转换公式： <span class="math display">\[
+^wp_c={ }^wp_b+R_b^w \bullet { } ^bp_c
+\tag{C9}
+\]</span> 前面说过，<span class="math inline">\(^wp_c\)</span>表示的是c系的原点对w系的位移矢量在w系下的表示，所以上面的公式其实就是一个矢量相加的公式，为了推导我们把<span class="math inline">\(^wp_c\)</span>写成<span class="math inline">\(^wp_{wc}\)</span>。同样，我们把偏导的问题理解为增加了一个小的增量，且变换前后的b、c系相对关系不变，公式就变成了： <span class="math display">\[
+\begin{aligned}
+^wp_c+\delta{^wp_c}
+={ }^wp_b+\delta{^wp_b}+R_b^w \delta R^b_{b&#39;} \bullet { }^{b&#39;}p_{c&#39;}\\
+={ }^wp_b+\delta{^wp_b}+R_b^w(I+\delta{\theta_b^{\wedge} })\bullet { }^bp_c
+\end{aligned}
+\tag{C10}
+\]</span> C10中注意，根据1)中的论述，<span class="math inline">\(\delta\theta_b\)</span>对应的是<span class="math inline">\(R_{b&#39;}^b\)</span>，所以这里要取个转置化简一下就变成了 <span class="math display">\[
+\delta{^wp_c}=\delta{^wp_b}-R_b^w\bullet{ { }^bp_c^{\wedge} }\delta{\theta_b}
+\tag{C11}
+\]</span> Jacobian就表示为（此处与原论文不同，应该是原文出错了，MSKCF-VIO的作者也是这么证明的）： <span class="math display">\[
+\begin{gather*}
+\frac{\partial\delta{^w{p_c} } }{\partial\delta{^wp_b}^T}=I\\
+\frac{\partial\delta{^w{p_c} } }{\partial\delta{\theta_b}^T}=
+-R_b^w\bullet{ { }^bp_c^{\wedge} }
+\end{gather*}
+\tag{C12}
+\]</span></p>
+<h3 id="d-观测残差对状态的jacobian">D 观测残差对状态的Jacobian</h3>
+<p>前面说过点的归一化坐标的估计值为： <span class="math display">\[
+\hat{\mathbf{z} }_{i}^{(j)}=\frac{1}{ { }^{C_{i} } \hat{Z}_{j} }\left[\begin{array}{c}
+{ }^{C_{i} } \hat{X}_{j} \\
+{ }^{C_i} \hat{Y}_{j}
+\end{array}\right], \quad
+\hat P_c=
+\left[\begin{array}{c}
+{ }^{C_{i}} \hat{X}_{j} \\
+{ }^{C_{i}} \hat{Y}_{j} \\
+{ }^{C_{i}} \hat{Z}_{j}
+\end{array}\right]=\hat {\mathbf R}_w^{C_i}
+\left({ }^{w} \hat{\mathbf{p} }_{f_{j} }-{ }^{w} \hat{\mathbf{p} }_{C_{i} }\right)
+\tag{D1}
+\]</span> 考虑一个问题：对于<span class="math inline">\(y=f(x)\)</span>，y对x求偏导和<span class="math inline">\(\delta y对\delta x\)</span>求偏导实质上是一回事，把i、j这些标号略掉，我们要考虑的就是<span class="math inline">\(\hat z\)</span>对<span class="math inline">\(\hat \theta_{c},^G\hat p_f,^G\hat{p_c}\)</span>的偏导数，其中<span class="math inline">\(\theta_c\)</span>是<span class="math inline">\(R_w^c\)</span>的李代数表示。</p>
+<p>用链式法则求导： <span class="math display">\[
+\frac{\partial{\hat z}}{\partial\hat \theta_{c}}=
+\frac{\partial{\hat z}}{\partial\hat P}
+\frac{\partial{\hat P}}{\partial\hat \theta_{c}}
+=-J_{\hat P_c}[R_w^c({}^w\hat p_{f}-{}^w\hat p_{c})]^{\wedge}
+\tag{D2}
+\]</span> 其中 <span class="math display">\[
+J_{\hat P_c}=\frac{\partial{\hat z}}{\partial\hat P}=
+\frac{1}{\hat{Z}}\left[\begin{array}{ccc}
+1 &amp; 0 &amp; -\frac{\hat X}{\hat Z} \\
+0 &amp; 1 &amp; -\frac{\hat Y}{\hat{Z}}
+\end{array}\right]
+\tag{D3}
+\]</span> D2中的<span class="math inline">\(\frac{\partial{\hat P}}{\partial\hat \theta_{c}}\)</span>实质上是个李代数的求导，参见高博的SLAM十四讲。要注意的地方是，十四讲中李代数求导的部分完全没有考虑上下标的对应关系，我认为不太准确。记<span class="math inline">\(({}^w\hat p_{f}-{}^w\hat p_{c})=p\)</span>，则 <span class="math display">\[
+\frac{\partial R_w^cp}{\partial \delta\theta_c}=
+\frac{R_c^{c&#39;}R_w^cp-R_w^cp}{\delta \theta_c}
+=\frac{(I-[\delta{\theta_c]_\times})R_w^cp
+-R_w^c p}{\delta \theta_c}\\
+=[R_w^cp]_{\times}
+\tag{D4}
+\]</span> 注意在上面的转换中，旋转矩阵的左扰动对应的旋转角不在c系中，而在c'系中，因此是<span class="math inline">\(R_c^{c&#39;}=R_{c&#39;}^{cT}=(I+[\delta{\theta_c]_\times})^T=(I-[\delta{\theta_c]_\times})\)</span>。求得的形式与TR-MSCKF中的形式保持了一致。</p>
+<p>同理： <span class="math display">\[
+\frac{\partial{\hat z}}{\partial^w\hat p_{c}}=
+\frac{\partial{\hat z}}{\partial\hat P}
+\frac{\partial{\hat P}}{\partial^w\hat p_{c}}
+=-J_{\hat P_c}R_w^c
+\tag{D5}
+\]</span> 对其他状态的偏导数都为0，所以 <span class="math display">\[
+\begin{gather*}
+H_{X}=\frac{\partial{\hat z}}{\partial \tilde{X}} 
+=\left[\begin{array}{llll}
+0_{2 \times 15} &amp; 0_{2 \times 6} &amp; \cdots &amp; -J_{\hat P_c}[R_w^c({}^w\hat p_{f}-{}^w\hat p_{c})]^{\wedge}
+&amp; -J_{\hat P_c}R_w^c &amp; \cdots
+\end{array}\right]
+\end{gather*}
+\tag{D6}
+\]</span> 对<span class="math inline">\(^G\hat p_f\)</span>的Jacobian矩阵为： <span class="math display">\[
+H_{f}=\frac{\partial{\hat z}}{\partial^w\hat p_{f}}=
+\frac{\partial{\hat z}}{\partial\hat P}
+\frac{\partial{\hat P}}{\partial^w\hat p_{f}}
+=J_{\hat P_c}R_w^c
+\tag{D6}
+\]</span></p>
+<h4 id="关于使用不同">关于使用不同</h4>
+<h3 id="e-givens-rotation">E Givens Rotation</h3>
+<p>吉文斯旋转其实本质上就是一个二维平面上的旋转矩阵的扩展，这个方法主要用来对矩阵进行QR分解，也就自然而然能用于求解线性方程组。其形式如下： <span class="math display">\[
+G(i, j, \theta)=\left[\begin{array}{ccccccc}
+1 &amp; \cdots &amp; 0 &amp; \cdots &amp; 0 &amp; \cdots &amp; 0 \\
+\vdots &amp; \ddots &amp; \vdots &amp; &amp; \vdots &amp; &amp; \vdots \\
+0 &amp; \cdots &amp; c &amp; \cdots &amp; s &amp; \cdots &amp; 0 \\
+\vdots &amp; &amp; \vdots &amp; \ddots &amp; \vdots &amp; &amp; \vdots \\
+0 &amp; \cdots &amp; -s &amp; \cdots &amp; c &amp; \cdots &amp; 0 \\
+\vdots &amp; &amp; \vdots &amp; &amp; \vdots &amp; \ddots &amp; \vdots \\
+0 &amp; \cdots &amp; 0 &amp; \cdots &amp; 0 &amp; \cdots &amp; 1
+\end{array}\right]
+\tag{E1}
+\]</span> 吉文斯旋转的显著好处是通过左乘，可以使目标位置的元素为0,从而将一个矩阵化为上三角矩阵，例如对 <span class="math display">\[
+A=\left[\begin{matrix}
+a\\b
+\end{matrix}\right]
+\tag{E2}
+\]</span> 如果取<span class="math inline">\(r=\sqrt{a^{2}+b^{2}}, c=\frac{a}{r}, s=-\frac{b}{r}\)</span>，就可以满足 <span class="math display">\[
+\left[\begin{array}{cc}
+c &amp; -s \\
+s &amp; c
+\end{array}\right]\left[\begin{array}{l}
+a \\
+b
+\end{array}\right]=\left[\begin{array}{l}
+r \\
+0
+\end{array}\right]
+\tag{E3}
+\]</span> 以此类推，就可以把一个矩阵变成上三角矩阵，对应QR分解，Q即为每次的吉文斯旋转矩阵的连乘，R即为最后得到的上三角矩阵。这个方法在求解左零空间时的主要好处是，左零空间的求解本质上是求满足<span class="math inline">\(A^Tx=0\)</span>的所有线性无关解，用Givens Rotation来解此方程可以减小计算量。</p>
+<h2 id="参考文献">参考文献：</h2>
+<p>1.Mourikis 07年的原论文：<a href="">A multi-state constraint kalman filter for vision-aided inertial navigation</a></p>
+<p>2.Mourikis早一年的同名报告里有部分公式的推导：<a target="_blank" rel="noopener" href="https://intra.ece.ucr.edu/~mourikis/tech_reports/TR_MSCKF.pdf">TR-MSCKF</a></p>
+<p>3.崔华坤大佬的博客：<a target="_blank" rel="noopener" href="https://github.com/StevenCui/VIO-Doc">VIO-Doc</a></p>
+<p>4.高博的SLAM十四讲</p>
+<p>5.捷联惯性导航技术（第2版）张天光等人的译本</p>
+<p>6.惯性导航（第二版）秦永元著</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/SLAM/" rel="tag"># SLAM</a>
+              <a href="/tags/MSCKF/" rel="tag"># MSCKF</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/Ubuntu%E5%AE%89%E8%A3%85%E5%92%8C%E9%85%8D%E7%BD%AE%E7%BA%AA%E5%BD%95.html" rel="prev" title="Ubuntu安装和开发环境配置">
+      <i class="fa fa-chevron-left"></i> Ubuntu安装和开发环境配置
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/MSCKF%E7%B3%BB%E5%88%97%E7%AC%94%E8%AE%B0%EF%BC%9AMSCKF-VIO.html" rel="next" title="MSCKF系列笔记：MSCKF-VIO">
+      MSCKF系列笔记：MSCKF-VIO <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#msckf%E7%B3%BB%E5%88%97%E7%AC%94%E8%AE%B0mourikis-07"><span class="nav-number">1.</span> <span class="nav-text">MSCKF系列笔记：（Mourikis 07)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9D%90%E6%A0%87%E7%B3%BB%E5%92%8C%E7%8A%B6%E6%80%81%E5%90%91%E9%87%8F%E5%AE%9A%E4%B9%89"><span class="nav-number">1.1.</span> <span class="nav-text">坐标系和状态向量定义</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#a.%E5%9D%90%E6%A0%87%E7%B3%BB%E5%AE%9A%E4%B9%89"><span class="nav-number">1.1.1.</span> <span class="nav-text">A.坐标系定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#b.%E7%8A%B6%E6%80%81%E5%90%91%E9%87%8F%E5%AE%9A%E4%B9%89"><span class="nav-number">1.1.2.</span> <span class="nav-text">B.状态向量定义</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#imu%E7%8A%B6%E6%80%81%E5%90%91%E9%87%8F15%E7%BB%B4"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">IMU状态向量（15维）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%9B%B8%E6%9C%BA%E7%9A%84%E4%BD%8D%E5%A7%BF6n%E7%BB%B4"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">相机的位姿（6N维）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AF%AF%E5%B7%AE%E7%8A%B6%E6%80%81%E5%90%91%E9%87%8F"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">误差状态向量</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9E%E7%BB%AD%E7%B3%BB%E7%BB%9F%E5%BB%BA%E6%A8%A1"><span class="nav-number">1.2.</span> <span class="nav-text">连续系统建模</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%BC%E8%88%AA%E6%96%B9%E7%A8%8B"><span class="nav-number">1.2.1.</span> <span class="nav-text">导航方程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A5%E8%AF%AF%E5%B7%AE%E9%87%8F%E4%B8%BA%E7%8A%B6%E6%80%81%E7%9A%84%E9%80%92%E6%8E%A8%E6%96%B9%E7%A8%8B"><span class="nav-number">1.2.2.</span> <span class="nav-text">以误差量为状态的递推方程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A6%BB%E6%95%A3%E5%8C%96%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.3.</span> <span class="nav-text">离散化实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%8A%B6%E6%80%81%E6%89%A9%E5%A2%9Eaugmentation"><span class="nav-number">1.4.</span> <span class="nav-text">状态扩增(augmentation)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%AF%E5%B7%AE%E7%8A%B6%E6%80%81%E7%9A%84%E4%BA%A7%E7%94%9F"><span class="nav-number">1.4.1.</span> <span class="nav-text">误差状态的产生</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8F%E6%96%B9%E5%B7%AE%E7%9F%A9%E9%98%B5%E7%9A%84%E5%A2%9E%E5%B9%BF"><span class="nav-number">1.4.2.</span> <span class="nav-text">协方差矩阵的增广</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E9%87%8F%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.5.</span> <span class="nav-text">测量模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%82%E6%B5%8B%E7%9A%84%E9%A2%84%E6%B5%8B%E5%92%8C%E6%AE%8B%E5%B7%AE"><span class="nav-number">1.5.1.</span> <span class="nav-text">观测的预测和残差</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#jacobian%E8%AE%A1%E7%AE%97"><span class="nav-number">1.5.2.</span> <span class="nav-text">Jacobian计算</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ekf%E7%9A%84%E6%9B%B4%E6%96%B0%E7%AD%96%E7%95%A5"><span class="nav-number">1.6.</span> <span class="nav-text">EKF的更新策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%AE%E9%A2%98"><span class="nav-number">1.7.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%84%E5%BD%95"><span class="nav-number">1.8.</span> <span class="nav-text">附录</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#a.-%E7%8A%B6%E6%80%81%E6%96%B9%E7%A8%8B%E4%B8%ADfg%E7%9F%A9%E9%98%B5%E7%9A%84%E6%8E%A8%E5%AF%BC"><span class="nav-number">1.8.1.</span> <span class="nav-text">A. 状态方程中F、G矩阵的推导</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%92%E5%BA%A6%E5%BE%AE%E5%88%86%E6%96%B9%E7%A8%8B"><span class="nav-number">1.8.1.1.</span> <span class="nav-text">1）角度微分方程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%9F%E5%BA%A6%E5%BE%AE%E5%88%86%E6%96%B9%E7%A8%8B"><span class="nav-number">1.8.1.2.</span> <span class="nav-text">2）速度微分方程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#b.-%E8%BF%9E%E7%BB%AD%E7%B3%BB%E7%BB%9F%E5%8D%A1%E5%B0%94%E6%9B%BC%E6%BB%A4%E6%B3%A2%E6%96%B9%E7%A8%8B"><span class="nav-number">1.8.2.</span> <span class="nav-text">B. 连续系统卡尔曼滤波方程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BB%BA%E7%AB%8B%E7%AD%89%E6%95%88%E7%A6%BB%E6%95%A3%E6%96%B9%E7%A8%8B"><span class="nav-number">1.8.2.1.</span> <span class="nav-text">1）建立等效离散方程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B1%82%E7%AD%89%E6%95%88%E7%A6%BB%E6%95%A3%E6%A8%A1%E5%9E%8B%E7%9A%84%E5%8D%A1%E5%B0%94%E6%9B%BC%E6%BB%A4%E6%B3%A2%E6%96%B9%E7%A8%8B"><span class="nav-number">1.8.2.2.</span> <span class="nav-text">2) 求等效离散模型的卡尔曼滤波方程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%A4delta-t%E8%B6%8B%E4%BA%8E0%E6%B1%82%E6%9E%81%E9%99%90"><span class="nav-number">1.8.2.3.</span> <span class="nav-text">3） 令\(\Delta T\)趋于0，求极限</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#c.%E5%A2%9E%E5%B9%BF%E7%8A%B6%E6%80%81%E5%AF%B9imu%E7%8A%B6%E6%80%81%E7%9A%84%E5%81%8F%E5%AF%BC"><span class="nav-number">1.8.3.</span> <span class="nav-text">C.增广状态对IMU状态的偏导</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#delta-theta_c%E5%AF%B9delta-theta_b%E7%9A%84jacobian"><span class="nav-number">1.8.3.1.</span> <span class="nav-text">1）\(\delta \theta_c\)对\(\delta \theta_b\)的Jacobian</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#delta-p_c%E5%AF%B9delta-p_b%E7%9A%84jacobian"><span class="nav-number">1.8.3.2.</span> <span class="nav-text">2)\(\delta P_C\)对\(\delta P_B\)的Jacobian</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#d-%E8%A7%82%E6%B5%8B%E6%AE%8B%E5%B7%AE%E5%AF%B9%E7%8A%B6%E6%80%81%E7%9A%84jacobian"><span class="nav-number">1.8.4.</span> <span class="nav-text">D 观测残差对状态的Jacobian</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E4%BD%BF%E7%94%A8%E4%B8%8D%E5%90%8C"><span class="nav-number">1.8.4.1.</span> <span class="nav-text">关于使用不同</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#e-givens-rotation"><span class="nav-number">1.8.5.</span> <span class="nav-text">E Givens Rotation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">1.9.</span> <span class="nav-text">参考文献：</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Qxz</p>
+  <div class="site-description" itemprop="description">Nobody exists on purpose.Nobody belongs anywhere.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/QuXuzhong" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;QuXuzhong" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.zhihu.com/people/qu-xu-zhong-83" title="Zhihu → https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;qu-xu-zhong-83" rel="noopener" target="_blank"><i class="fab fa-zhihu fa-fw"></i>Zhihu</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Qxz</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+          load: ['[tex]/mhchem'],
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+          packages: {'[+]': ['mhchem']},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
