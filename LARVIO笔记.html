@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"shisirqxz.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","width":240,"display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="MSCKF系列笔记：LARVIO LARVIO是邱博士做的一套开源的单目VIO方案。本文主要是整理一下相关的文献，以参考文献【3】为主体，梳理整个系统采用的方程推导和主要工作内容。 一、摘要 本文的主要贡献包括以下几个方面： 1.在误差传递函数中使用了一维逆深度的参数化方式，提高了计算效率和数值稳定性，进而提高了精确度； 2.引入了ZUPT来处理零速飘移； 3.提供了在线的时空标定。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MSCKF系列笔记：LARVIO">
+<meta property="og:url" content="https://shisirqxz.com/LARVIO%E7%AC%94%E8%AE%B0.html">
+<meta property="og:site_name" content="Qxz&#39;s Blog">
+<meta property="og:description" content="MSCKF系列笔记：LARVIO LARVIO是邱博士做的一套开源的单目VIO方案。本文主要是整理一下相关的文献，以参考文献【3】为主体，梳理整个系统采用的方程推导和主要工作内容。 一、摘要 本文的主要贡献包括以下几个方面： 1.在误差传递函数中使用了一维逆深度的参数化方式，提高了计算效率和数值稳定性，进而提高了精确度； 2.引入了ZUPT来处理零速飘移； 3.提供了在线的时空标定。">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-03-05T12:28:39.777Z">
+<meta property="article:modified_time" content="2021-03-05T02:03:34.848Z">
+<meta property="article:author" content="Qxz">
+<meta property="article:tag" content="SLAM">
+<meta property="article:tag" content="MSCKF">
+<meta property="article:tag" content="LARVIO">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://shisirqxz.com/LARVIO%E7%AC%94%E8%AE%B0.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>MSCKF系列笔记：LARVIO | Qxz's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Qxz's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://shisirqxz.com/LARVIO%E7%AC%94%E8%AE%B0.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Qxz">
+      <meta itemprop="description" content="Nobody exists on purpose.Nobody belongs anywhere.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Qxz's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MSCKF系列笔记：LARVIO
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-03-05 20:28:39 / Modified: 10:03:34" itemprop="dateCreated datePublished" datetime="2021-03-05T20:28:39+08:00">2021-03-05</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/SLAM%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">SLAM学习</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="msckf系列笔记larvio">MSCKF系列笔记：LARVIO</h1>
+<p>LARVIO是邱博士做的一套开源的单目VIO方案。本文主要是整理一下相关的文献，以参考文献【3】为主体，梳理整个系统采用的方程推导和主要工作内容。</p>
+<h2 id="一摘要">一、摘要</h2>
+<p>本文的主要贡献包括以下几个方面：</p>
+<p>1.在误差传递函数中使用了一维逆深度的参数化方式，提高了计算效率和数值稳定性，进而提高了精确度；</p>
+<p>2.引入了ZUPT来处理零速飘移；</p>
+<p>3.提供了在线的时空标定。</p>
+<a id="more"></a>
+<p>LARVIO是在李明扬老师的hybrid VIO的想法上进一步改进的。hybrid VIO实际上就是EKF-SLAM和MSCKF方案的融合。传统的MSCKF方案不会把特征点的位姿加入到状态向量中，如果一个特征点被观测的时间窗口比图像的滑窗还长，那么这个点的观测要么会被丢弃要么会过早被使用（事实上从MSCKF-VIO源码来看，这个点如果能被成功三角化，丢弃的帧的观测还是会被用来进行一次量测的更新。当然，这个时候三角化的精度可能不能保证，不过具体影响有多大还要==做实验看看==。）hybrid VIO把这些观测时间较长的特征点以3D逆深度的方式参数化，加入到状态中。为了进一步降低计算量，LARVIO采用了一维逆深度的方式对特征点进行参数化，这种方式要解决的一个问题是当点的host frame（也就是用来参数化这个点坐标的那一帧）从滑窗中丢掉时，需要将这个点转换到新的host frame下，同时需要对其协方差进行解析地propagate。（优化方案中不需要考虑这一点，因为没有协方差的问题）</p>
+<p>另一方面，很多VIO没有考虑静止情况引发的问题。此时IMU的测量噪声和误差可能会导致滤波器的发散。R-VIO用IMU数据检测静止情况，并在此时停止更新。LARVIO针对这一点引入了ZUPT，在静止情况下有效地加入了约束。</p>
+<h2 id="二本文方法的实现">二、本文方法的实现</h2>
+<p>总结一下文章中的notation，包括状态的定义和递推、协方差递推、基于特征的观测更新和1维逆深度传播方程。</p>
+<h3 id="状态变量和状态转移矩阵">1.状态变量和状态转移矩阵</h3>
+<p>同样采用误差卡尔曼滤波的模型，定义误差状态为以下三部分：</p>
+<p><span class="math inline">\(x_{leg}\)</span>：包含了全部的legacy state，即当前IMU的十五维状态，相机-IMU外参矩阵（6维）以及时间偏移（相机和IMU数据的时间差）共22维。后面的两部分状态对应在线时空标定的实现。</p>
+<p><span class="math inline">\(x_{pos}\)</span>:滑动窗内的IMU历史位姿，最多N个，每个为6维（只保存了p、q)。<strong>与MSCKF不同之处在于这里用的是IMU位姿，而不是相机的位姿</strong></p>
+<p><span class="math inline">\(x_{aug}\)</span>:当前跟踪长度长于N的全部特征点坐标，最多M个，如果满足条件的多于M个，那么保留最好的M个，剩下的作为MSCKF的特征点（<u>我理解MSCKF特征点的含义是只用于构建观测，不加入到状态中</u>）</p>
+<p>注意与MSCKF-VIO和MSCKF07那一套不一样的是，本文使用了Hamilton四元数来推导方程。而且定义扰动的方式为左扰动，对于旋转而言，意味着扰动发生在世界坐标系下，这会导致状态传播矩阵与传统的MSCKF方案有很大的不同。（详见参考文献1，邱博有详细的推导）而且本文在离散化的时候没有采用MSCKF-VIO那种线性展开的方式（3阶泰勒展开），而是推导了解析的形式，其具体形式和推导过程在参考文献[4]中有详细的说明。</p>
+<p>对于<span class="math inline">\(x_{pos}\)</span>和<span class="math inline">\(x_{aug}\)</span>而言，显而易见其状态转移矩阵为单位矩阵。</p>
+<h3 id="状态扩增或删减时协方差矩阵的更新">2.状态扩增或删减时协方差矩阵的更新</h3>
+<p>状态的删除过程是比较简单的，主要的问题集中在状态如何扩增、扩增时候Jacobian的求导上。</p>
+<h4 id="imu位姿增删">imu位姿增删</h4>
+<p>与传统的MSCKF相比，由于状态中采用了IMU的位姿，<span class="math inline">\(x_{pos}\)</span>在扩增的时候Jacobian的求解会非常简单，因为扩增的状态就是此刻的IMU状态。</p>
+<p><span class="math display">\[
+J_{\mathrm{p} }=\left[\begin{array}{llll}
+I_{3 \times 3} &amp; 0_{3 \times 3} &amp; 0_{3 \times 3} &amp; 0_{3 \times(13+6 n+m)} \\
+0_{3 \times 3} &amp; 0_{3 \times 3} &amp; I_{3 \times 3} &amp; 0_{3 \times(13+6 n+m)}
+\end{array}\right]
+\]</span></p>
+<h4 id="特征点状态增删">特征点状态增删</h4>
+<p>对应<span class="math inline">\(x_{aug}\)</span>，跟踪长度长于N的特征点会加入到状态向量中。此处用到了一维逆深度的参数化方式。</p>
+<p><strong>1D IDP的初始化方式：</strong></p>
+<ol type="1">
+<li>当一个特征点被观测次数达到N时，进行三角化得到其在host frame中的坐标<span class="math inline">\(p_{f_{j}}\)</span>。（由于此刻最新的IMU信息还没有被修正过，而相机的位姿是用IMU+外参计算的，所以这个过程只用了前N-1帧的观测。）</li>
+<li>由于估计的相机位姿和特征观测都存在误差，当host frame发生改变时投影的结果精度很难保证，为此把点的坐标进行归一化，<u>这样可以减小误差</u>。这个归一化后的3d坐标将被认为是准确的坐标，在滤波过程中不会发生改变。</li>
+<li>之后得到在host frame下的逆深度<span class="math inline">\(\rho\)</span>。那么一个特征点将由其在host frame中的观测和其逆深度来一起定义。初始化后需要推导其他状态对此参数的Jacobian(<strong>文章20指出了一种方法</strong>)。</li>
+</ol>
+<p><strong>Jacobian求解</strong></p>
+<p><strong>host frame指的是什么？</strong></p>
+<p>当一个特征点被观测次数达到N时，会用N-1帧的观测对其进行三角化，得到的次新帧下点的坐标。此帧即被称为host frame。在之后的传播过程中，如果特征点被观测到的帧数多于滑动窗中的帧的数量，旧的host frame就要被剔除掉，选取最新的帧作为新的host frame，此时需要通过传播方程更新host frame。</p>
+<h3 id="观测更新">3.观测更新</h3>
+<p>观测仍然是重投影误差，但测量残差包括了三部分</p>
+<p>1.MSCKF特征测量残差</p>
+<p>这部分和传统MSCKF系统基本一致，跟丢的特征点会进行三角化，接着进行量测更新。区别是由于加入了时间标定，多出来一项Jacobian。</p>
+<p>2.旧EKF特征残差</p>
+<p>这部分是通过旧的已增广的特征点产生的重投影误差。此时更新方式除了形式上有一些变化（比如点定义的坐标系是在host frame下，加入了传感器误差参数等等），本质上和EKF-SLAM的更新方式是一样的。</p>
+<p>3.新EKF特征残差</p>
+<p>对刚刚加入的增广特征点，利用其在各帧下的重投影误差构成的测量残差。其公式表达与上面旧EKF特征测量残差的形式是一致的，只是为了维护协方差，对其形式进行了一定的变换。</p>
+<p>具体实现的思路是：对跟踪时间不满足被增广条件的特征点，跟丢时将其作为MSCKF的特征点进行量测更新；而跟踪时间满足被增广条件的特征点，会求解其逆深度加入到状态向量中，并在此后的每一帧都进行量测的更新。</p>
+<h3 id="d-idp-propagation">4.1D IDP propagation</h3>
+<p>逆深度参数化方式在滤波中的propagation是本文做出主要贡献的地方。长时间被跟踪的特征点，其host frame在一段时间后很可能会掉出相机位姿的滑窗，此时需要选取最近的一帧（或者用其他条件来挑选一帧）作为其新的参考帧，这个点的逆深度和对应的协方差都需要被重新计算。注意此处是一个单纯的传播过程，状态的物理含义和协方差的大小都变了，但是数值上并没有对状态量做更新，因为用的是误差状态。</p>
+<p><strong>为什么host frame被剃掉后特征点需要重新参数化</strong></p>
+<p>我目前的理解是，特征点在host frame下被参数化，计算重投影误差时要利用host frame的位姿来求解这个点在各帧下的理论观测值，随着host frame的位姿在滤波过程中被不断的优化，这个理论观测值也在被不断优化，当host frame滑出窗口后，其位姿不再被优化，为了保证精度就必须要转换到新的host frame。</p>
+<p>那么为什么不直接使用在世界坐标系下的三角化结果来构建在各帧中的观测，并将其放入状态中？用x、y、z这种方式来参数化点的做法在SLAM系统中很早就被证实不好用，主要是高斯近似不好，现在的方案很少这么做。</p>
+<h2 id="三闭式解的zupt">三、闭式解的ZUPT</h2>
+<p>如前文所说，静止情况下IMU测量的噪声会使估计的精度变差，为此需要进行特殊的处理。VIO显而易见的好处是引入了视觉测量，更方便区分出静止和匀速运动的情况。本文就采取了基于视觉方法的静止运动识别，策略很简单，就是看两帧之间特征点光流矢量的大小。为了减小动态物体上光流的影响，去掉最大的10个运动矢量，取剩下的矢量中的最大值与阈值比较，如果小于阈值就认为满足静止的条件。但是这种策略显然不适用于有大量动态物体的场景，这也是LARVIO的改进方向之一。</p>
+<h3 id="zupt的约束方程">ZUPT的约束方程</h3>
+<p>检测到静止状态后，通过计算三项测量残差（zero velocity,identical-position,identical-rotation)将ZUPT方法引入到了量测方程的更新中。</p>
+<p>1）零速约束</p>
+<p>理想速度为0，与估计速度之差就可以构成测量残差。这一项很简单。 <span class="math display">\[
+\begin{aligned}
+r_{\text {zupt }_{\mathrm{v}}} &amp;=z_{\text {zupt }_{\mathrm{v}}}-\hat{z}_{\text {zupt }_{\mathrm{v}}} \\
+&amp;=-\hat{v}_{\mathrm{b}}^{\mathrm{W}} \\
+&amp;=v_{\mathrm{b}}^{\mathrm{w}}-\hat{v}_{\mathrm{b}}^{\mathrm{W}} \\
+&amp;=\delta v_{\mathrm{b}}^{\mathrm{w}}
+\end{aligned}
+\]</span> 2）自身位置不变约束</p>
+<p>显然两帧之间IMU位置差应该为0，以此又可以引入新的约束。用一个小的技巧可以把测量残差构造成关于误差状态的线性方程，方法如下：</p>
+<p>考虑理想位置差和估计位置差为： <span class="math display">\[
+\left\{\begin{array}{l}
+z_{\text {zupt }_{\mathrm{p}}}=p_{\mathrm{b}}^{\mathrm{w}}(n)-p_{\mathrm{b}}^{\mathrm{w}}(n-1)=0_{3 \times 1} \\
+\hat{z}_{\text {zupt }_{\mathrm{p}}}=\hat{p}_{\mathrm{b}}^{\mathrm{W}}(n)-\hat{p}_{\mathrm{b}}^{\mathrm{W}}(n-1)
+\end{array}\right.
+\]</span> 测量残差可以构造为： <span class="math display">\[
+\begin{aligned}
+r_{\text {zuptp }} &amp;=z_{\text {auptp }}-\hat{z}_{\text {zuptp }} \\
+&amp;=-\hat{p}_{\mathrm{b}}^{\mathrm{W}}(n)+\hat{p}_{\mathrm{b}}^{\mathrm{W}}(n-1) \\
+&amp;=\left(p_{\mathrm{b}}^{\mathrm{w}}(n)-\hat{p}_{\mathrm{b}}^{\mathrm{W}}(n)\right)-\left(p_{\mathrm{b}}^{\mathrm{W}}(n-1)-\hat{p}_{\mathrm{b}}^{\mathrm{W}}(n-1)\right) \\
+&amp;=\delta p_{\mathrm{b}}^{\mathrm{w}}(n)-\delta p_{\mathrm{b}}^{\mathrm{W}}(n-1)
+\end{aligned}
+\]</span> 3）单位旋转约束</p>
+<p>用四元数来描述旋转，这个约束描述为： <span class="math display">\[
+\left\{\begin{array}{l}
+z_{\text {zupt }_{q}}=q_{b}^{\mathrm{w}}(n) \otimes\left(q_{\mathrm{b}}^{\mathrm{w}}(n-1)\right)^{-1}=[1,0,0,0]^{\mathrm{T}} \\
+\hat{z}_{\text {zupt }_{q}}=\hat{q}_{\mathrm{b}}^{\mathrm{w}}(n) \otimes\left(\hat{q}_{\mathrm{b}}^{\mathrm{w}}(n-1)\right)^{-1}
+\end{array}\right.
+\]</span> 按照定义的左扰动，可以得到： <span class="math display">\[
+\begin{array}{l}
+\delta q_{\mathrm{b}}^{\mathrm{w}}(n) \otimes \hat{q}_{\mathrm{b}}^{\mathrm{w}}(n)=\delta q_{\mathrm{b}}^{\mathrm{w}}(n-1) \otimes \hat{q}_{\mathrm{b}}^{\mathrm{W}}(n-1) \Rightarrow \\
+\left(\delta q_{\mathrm{b}}^{\mathrm{w}}(n)\right)^{-1} \otimes \delta q_{\mathrm{b}}^{\mathrm{w}}(n-1)=\hat{q}_{\mathrm{b}}^{\mathrm{W}}(n) \otimes\left(\hat{q}_{\mathrm{b}}^{\mathrm{W}}(n-1)\right)^{-1}
+\end{array}
+\]</span> 从而构建测量残差为： <span class="math display">\[
+\begin{aligned}
+r_{\text {zupt }_{\text {q }}} &amp;=\left\{z_{\text {zupt }_{\text {q }}}^{-1} \otimes \hat{z}_{\text {zupt }_{\text {q }}}\right\}_{(234)} \\
+&amp;=\left\{\hat{q}_{\mathrm{b}}^{\mathrm{W}}(n) \otimes\left(\hat{q}_{\mathrm{b}}^{\mathrm{W}}(n-1)\right)^{-1}\right\}_{(234)} \\
+&amp;=\left(-\delta \theta_{\mathrm{b}}^{\mathrm{W}}(n)+\delta \theta_{\mathrm{b}}^{\mathrm{w}}(n-1)\right) / 2
+\end{aligned}
+\]</span> 这一项又是关于角扰动的线性方程。</p>
+<h3 id="zupt的引入策略">ZUPT的引入策略</h3>
+<p>在LARVIO系统中，如果当前帧被检测为静止帧，会引入ZUPT，此时递推发生的主要变化包括：不再进行特征点构造重投影误差的量测更新，转而使用ZUPT的量测更新；从滑窗中剔除的不再是最旧的帧，而是次新帧（不管滑窗此时是否已达到长度限制，因为这些静止帧提供的信息是冗余的。）</p>
+<h2 id="参考文献">参考文献</h2>
+<p>1.邱博写的一篇详细公式推导：<a target="_blank" rel="noopener" href="https://github.com/PetWorm/IMU_error_state_propagation_doc"><strong>采用Hamilton四元数的低成本IMU误差方程详细推导</strong></a>。</p>
+<p>2.LARVIO的github页，表明了相关的论文：<a target="_blank" rel="noopener" href="https://github.com/PetWorm/LARVIO">LARVIO</a></p>
+<p>3.LARVIO文章：<a target="_blank" rel="noopener" href="https://www.sciencedirect.com/science/article/pii/S1000936120301722">Lightweight hybrid visual-inertial odometry with closed-form zero velocity update</a></p>
+<p>4.LARVIO的另一篇早些的文章，有详细的公式推导：<a target="_blank" rel="noopener" href="https://www.mdpi.com/1424-8220/19/8/1941">Monocular Visual-Inertial Odometry with an Unbiased Linear System Model and Robust Feature Tracking Front-End</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/SLAM/" rel="tag"># SLAM</a>
+              <a href="/tags/MSCKF/" rel="tag"># MSCKF</a>
+              <a href="/tags/LARVIO/" rel="tag"># LARVIO</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/FEJ.html" rel="prev" title="MSCKF笔记：可观性问题">
+      <i class="fa fa-chevron-left"></i> MSCKF笔记：可观性问题
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#msckf%E7%B3%BB%E5%88%97%E7%AC%94%E8%AE%B0larvio"><span class="nav-number">1.</span> <span class="nav-text">MSCKF系列笔记：LARVIO</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E6%91%98%E8%A6%81"><span class="nav-number">1.1.</span> <span class="nav-text">一、摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E6%9C%AC%E6%96%87%E6%96%B9%E6%B3%95%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.2.</span> <span class="nav-text">二、本文方法的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%8A%B6%E6%80%81%E5%8F%98%E9%87%8F%E5%92%8C%E7%8A%B6%E6%80%81%E8%BD%AC%E7%A7%BB%E7%9F%A9%E9%98%B5"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.状态变量和状态转移矩阵</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%8A%B6%E6%80%81%E6%89%A9%E5%A2%9E%E6%88%96%E5%88%A0%E5%87%8F%E6%97%B6%E5%8D%8F%E6%96%B9%E5%B7%AE%E7%9F%A9%E9%98%B5%E7%9A%84%E6%9B%B4%E6%96%B0"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.状态扩增或删减时协方差矩阵的更新</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#imu%E4%BD%8D%E5%A7%BF%E5%A2%9E%E5%88%A0"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">imu位姿增删</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%89%B9%E5%BE%81%E7%82%B9%E7%8A%B6%E6%80%81%E5%A2%9E%E5%88%A0"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">特征点状态增删</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%82%E6%B5%8B%E6%9B%B4%E6%96%B0"><span class="nav-number">1.2.3.</span> <span class="nav-text">3.观测更新</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#d-idp-propagation"><span class="nav-number">1.2.4.</span> <span class="nav-text">4.1D IDP propagation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E9%97%AD%E5%BC%8F%E8%A7%A3%E7%9A%84zupt"><span class="nav-number">1.3.</span> <span class="nav-text">三、闭式解的ZUPT</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#zupt%E7%9A%84%E7%BA%A6%E6%9D%9F%E6%96%B9%E7%A8%8B"><span class="nav-number">1.3.1.</span> <span class="nav-text">ZUPT的约束方程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#zupt%E7%9A%84%E5%BC%95%E5%85%A5%E7%AD%96%E7%95%A5"><span class="nav-number">1.3.2.</span> <span class="nav-text">ZUPT的引入策略</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">1.4.</span> <span class="nav-text">参考文献</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Qxz</p>
+  <div class="site-description" itemprop="description">Nobody exists on purpose.Nobody belongs anywhere.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/QuXuzhong" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;QuXuzhong" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.zhihu.com/people/qu-xu-zhong-83" title="Zhihu → https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;qu-xu-zhong-83" rel="noopener" target="_blank"><i class="fab fa-zhihu fa-fw"></i>Zhihu</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Qxz</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+          load: ['[tex]/mhchem'],
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+          packages: {'[+]': ['mhchem']},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

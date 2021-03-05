@@ -1168,7 +1168,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #3ce4db;
+  background: #ffd24a;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
@@ -2390,6 +2390,41 @@ hr {
   display: inline-block;
 }
 body {
-  background: url("/images/cthulhu.jpg");
+  background: url("/images/bg1.png");
+  background-repeat: no-repeat;
   background-attachment: fixed;
+  background-position: 50% 50%;
+  background-size: cover;
+  -webkit-background-size: cover;
+  -o-background-size: cover;
+  -moz-background-size: cover;
+  -ms-background-size: cover;
+}
+.main-inner {
+  background: rgba(0,0,0,0.75);
+  padding: 3.5em;
+  opacity: 1;
+  border-radius: 1em;
+}
+.post-body {
+  color: #fff;
+}
+body {
+  color: rgba(0,0,0,0) 0;
+  font-size: 1em;
+}
+.posts-expand .post-title-link {
+  display: inline-block;
+  position: relative;
+  color: #fff;
+  border-bottom: none;
+  line-height: 1.2;
+  vertical-align: top;
+}
+.posts-expand .post-meta {
+  margin: 0.3em 0 0.6em 0;
+  color: #fff;
+  font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 1.2em;
+  text-align: center;
 }
