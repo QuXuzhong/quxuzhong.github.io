@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"shisirqxz.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","width":240,"display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="ORB-SLAM2源码阅读笔记 之前看完了ORB-SLAM2的源码，最近需要仔细看看其回环检测和后端优化的部分，干脆把整个代码重新整理一下。其源码在网络上已经有很多人分析和注释，主要看单目的部分，从Examples&#x2F;Monocular&#x2F;mono_euroc.cc入手。最近发现了一份ORB-SLAM2详细注释，出自一个开源学习小组，link，在这个github页面里还贴了一些视频讲解，非常详细。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ORB-SLAM2源码阅读笔记">
+<meta property="og:url" content="https://shisirqxz.com/ORB_SLAM2%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0.html">
+<meta property="og:site_name" content="Qxz&#39;s Blog">
+<meta property="og:description" content="ORB-SLAM2源码阅读笔记 之前看完了ORB-SLAM2的源码，最近需要仔细看看其回环检测和后端优化的部分，干脆把整个代码重新整理一下。其源码在网络上已经有很多人分析和注释，主要看单目的部分，从Examples&#x2F;Monocular&#x2F;mono_euroc.cc入手。最近发现了一份ORB-SLAM2详细注释，出自一个开源学习小组，link，在这个github页面里还贴了一些视频讲解，非常详细。">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-04-14T14:50:39.053Z">
+<meta property="article:modified_time" content="2021-04-14T14:50:20.230Z">
+<meta property="article:author" content="Qxz">
+<meta property="article:tag" content="SLAM">
+<meta property="article:tag" content="ORB-SLAM2">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://shisirqxz.com/ORB_SLAM2%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>ORB-SLAM2源码阅读笔记 | Qxz's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Qxz's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://shisirqxz.com/ORB_SLAM2%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Qxz">
+      <meta itemprop="description" content="Nobody exists on purpose.Nobody belongs anywhere.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Qxz's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ORB-SLAM2源码阅读笔记
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-04-14 22:50:39 / Modified: 22:50:20" itemprop="dateCreated datePublished" datetime="2021-04-14T22:50:39+08:00">2021-04-14</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="orb-slam2源码阅读笔记">ORB-SLAM2源码阅读笔记</h1>
+<p>之前看完了ORB-SLAM2的源码，最近需要仔细看看其回环检测和后端优化的部分，干脆把整个代码重新整理一下。其源码在网络上已经有很多人分析和注释，主要看单目的部分，从Examples/Monocular/mono_euroc.cc入手。最近发现了一份ORB-SLAM2详细注释，出自一个开源学习小组，<a target="_blank" rel="noopener" href="https://github.com/electech6/ORB_SLAM2_detailed_comments">link</a>，在这个github页面里还贴了一些视频讲解，非常详细。</p>
+<span id="more"></span>
+<h2 id="主函数">主函数</h2>
+<p>mono_euroc.cc-main：主函数入口，主函数的流程如下：</p>
+<p>step1: 按照时间戳逐个读取图片并保存其完整名字</p>
+<p>step2: 进行System类的初始化，加载SLAM系统。初始化时首先加载了ORB字典，然后用该字典初始化了KeyFrameDataBase类。之后初始化了Tracking、LocalMapping、LoopClosing线程（如果开启可视化界面还会有一个viewer线程。除了tracking线程，其它的线程都直接开始运行。</p>
+<p>step3: 进入循环，依次追踪序列中的每一张图像</p>
+<p>step4: 结束循环，shut downSLAM系统，计算平均耗时并保存轨迹（以TUM格式保存）</p>
+<h2 id="tracking线程">Tracking线程</h2>
+<p>首先会检测是否要暂停或者清空局部建图线程，主要是为了保证资源在各个线程之间的合理分配。</p>
+<p>GrabImgaeMonocular：线程的核心函数，输入RGB或RBGA图像，返回世界坐标系到该帧相机坐标系的变换矩阵。</p>
+<ul>
+<li>首先将图像转换为单通道灰度图</li>
+<li>利用图像构造Frame对象，构造时提取了ORB特征点，然后进行了畸变校正，之后将特征点分配到了图像网格中。</li>
+<li>Track：进行运动估计和局部地图跟踪的主要函数。</li>
+</ul>
+<h3 id="orb特征点的提取">ORB特征点的提取</h3>
+<p>ORB_SLAM2完全自己实现了完整的ORB特征提取和描述子计算、匹配的功能，相比opencv的实现效果和性能要更为优越。特征点的提取主要分成以下两步：</p>
+<p>1）ComputePyramid：图像金字塔计算</p>
+<p>对图像进行了扩充并构建了金字塔，扩充的部分主要为了使用FAST提取以及高斯卷积，根据卷积核的大小对图像进行扩充，保证卷积后的图像大小与原图相等。</p>
+<p>图像金字塔的主要作用在于实现尺度不变的特性，随着摄像机的移动特征的尺度发生变化，但通过构建多层金字塔，特征可以在不同层之间相互匹配。</p>
+<p>2）ComputeKeyPointsOctTree：使用四叉树的方式计算每层图像特征点并进行分配</p>
+<p>首先对图像进行了网格化（划分成30*30大小的网格），在每个网格内执FAST检测，初步保证了特征的均匀化；然后通过四叉树的方式进一步保证特征点的均匀性。对第一步得到的图像从初始节点开始，对每个可分的节点 再反复进行四等分，直到得到多于25个包含了特征的Node，最后从每个Node中选取一个质量最好（响应值最高）的点作为特征点</p>
+<p><strong>FAST特征提取</strong></p>
+<p>ORB自己实现了高效的Oriented-FAST特征提取，依据的主要原理是灰度质心法，其大致步骤如下：</p>
+<p>1）为了旋转以后像素的不变性，用一个半径30的圆来计算灰度质心，为了保证圆周的对称性，算了1/8圆周的坐标，然后进行重复的映射得到整个圆的坐标，这里的对称化操作很细致。</p>
+<p>2）用ORBextractor:IC_Angle函数计算特征点的方向，利用圆的对称性质加速了计算。</p>
+<h3 id="trackingtrack函数">Tracking::Track函数</h3>
+<h4 id="初始化">1) 初始化</h4>
+<p>如果还未成功初始化，先进行初始化的流程。</p>
+<p>MonocularInitialization：进行单目初始化，ORB-SLAM2的初始化策略比较严苛。要满足的条件为：</p>
+<ol type="1">
+<li>连续两帧跟踪的特征点数量多于100且两帧之间匹配的特征点数不少于100对。之后在进行三角化的过程中实际上只使用了原始图像（即金字塔的最底层）上提取的特征的匹配，所以初步提取的特征匹配要足够多。</li>
+<li>能成功初始化得到两帧间的运动。如果程序正常运行，初始化是不会失败的。使用RANSAC分别计算单应矩阵和基础矩阵并进行评分，选择合适的模型后在第一帧的相机坐标系下进行三角化，将该坐标系设为世界坐标系。</li>
+</ol>
+<p>初始化成功后会剔除无法三角化成功的匹配点，并利用初始化的结果对Map进行初始化。首先在地图中插入了关键帧和地图点，并更新了关键帧之间的连接关系，调用全局BA，之后计算了场景的中值深度，只有当场景的中值深度大于0且当前帧中观测到的地图点数目大于100时，才视为地图创建成功，此时若失败会调用Reset函数，<strong>整个系统都要重启。</strong>成功创建地图后会将被观测到的地图点的深度平均值进行归一化，并且进行地图和局部地图的维护更新。</p>
+<p><strong>特征点匹配策略</strong></p>
+<p>对前一帧的每个特征点进行遍历：</p>
+<ul>
+<li><p>首先在半径为100的圆内搜索当前帧所有的备选匹配点，搜索时以网格为单位，并且只挑选同一层的特征；然后从备选点中找到描述子距离的最小值和次小值；</p></li>
+<li><p>满足最小值小于阈值且最小值与最小值的比值小于阈值（初始化时为0.9，跟踪时更严苛，取0.7）的点进一步进行处理，删掉重复的匹配，并统计该点的描述子在两帧中的角度差，建立直方图。</p></li>
+<li><p>最后对特征匹配的方向一致性进行检测。通过旋转角度直方图进一步对匹配点进行筛选，保留直方图中前三高的列对应的匹配，并将筛选后的结果保存。</p></li>
+</ul>
+<p><strong>位姿求解</strong></p>
+<ol type="1">
+<li>在所有的匹配点中使用RANSAC方法随机选择8对匹配点为一组，默认取200组。每取一个点都会用序列的最后一个点覆盖这个点，并将最后一个点删除，这样保证了取点没有重复。</li>
+<li>分别开启两个线程用8点法来计算单应矩阵和基础矩阵，计算时首先要将特征点进行归一化（这里的归一化是指将所有的点映射到均值为原点、到均值的距离均值为1的圆周上，有充分证据表明这样可以提高计算的准确度）。每次计算后会对结果进行评分，保留评分最高的结果。</li>
+<li>根据评分选择使用单应矩阵还是基础矩阵来恢复运动，<span class="math inline">\(\frac {SH}{SH+SF}\)</span>大于0.4就使用单应矩阵（可见更偏向于使用单应矩阵来计算），其中SH表示单应矩阵的评分，SF表示基础矩阵的评分。</li>
+<li>使用F或H矩阵进行运动恢复时都会求得多组解，为了保证解的准确性，通过CheckRT找出三角化结果比较好的点，统计数量。对R、t 的多组假设，类似ORB特征匹配的思想，会要求最好的结果相对次好的结果的显著性要足够突出，对F矩阵的分解结果，只能有一组结果对应的好点数多于70%。</li>
+</ol>
+<p><strong>CheckRT三角化的评分策略：</strong></p>
+<ol type="1">
+<li>点的深度不能为无穷</li>
+<li>点的深度为正，且求得的两个相机光心视差角大小够大</li>
+<li>匹配点的重投影误差小于阈值</li>
+</ol>
+<p><strong>单应矩阵和基础矩阵评分策略</strong></p>
+<p>对单应矩阵的评分使用了卡方检验的思想，卡方检验实质上就是用于检验随机变量是否符合某种假设的分布。这里假设了重投影误差的每一维（x和y两维）都服从正态分布<span class="math inline">\(N(0,\sigma^2)\)</span>，按照卡方分布的思想，<span class="math inline">\(\frac{(x-\hat x)^2+(y-\hat y)^2}{\sigma^2}\)</span>服从2维的卡方分布，所以用2维卡方分布的阈值来判定是否接受该值。如果一个点在两帧之间互相的重投影误差都被接受，这个点被认为是内点，并加上对应的评分。所以计算的单应矩阵越准，内点越多，评分越高。</p>
+<h4 id="初步位姿估计slam模式">2.1）初步位姿估计：SLAM模式</h4>
+<p>如果已经成功初始化且开启了地图更新，会执行正常的SLAM流程。</p>
+<ul>
+<li>首先检查是否是正常跟踪状态，若不满足需要直接执行重定位</li>
+<li>检查上一帧跟踪的地图点是否在LocalMapping线程中被替换过并进行对应的更新；</li>
+<li>如果没有速度模型或者当前帧紧跟在重定位的帧后面，使用<strong>参考关键帧</strong>来进行跟踪和位姿求解；否则尝试使用恒速模型使用上一个<strong>普通帧</strong>来进行跟踪和求解，只有求解失败的情况下才使用参考关键帧来进行跟踪。这两种思路的主要区别实际上在于如何加速特征点的匹配，如果可以使用恒速模型，就可以形成当前帧位姿的初步估计，就可以大概获得前一帧的点在当前帧的位置；如果使用参考关键帧，可以通过BoW加速匹配，只考虑在字典中的同一节点的特征点。</li>
+</ul>
+<p>-&gt;两种模型区别的核心在于SearchByBow和SearchByProjection。</p>
+<p><strong>TrackReferenceKeyFrame</strong></p>
+<p>通过参考关键帧的地图点来对当前帧进行跟踪</p>
+<ul>
+<li>首先将普通帧的描述子转化为BoW向量</li>
+<li>通过计算的词袋向量加速特征点匹配，在匹配之前多加了一步判断是否属于字典的同一node。后续的匹配策略和初始化是相同的，这里对最小距离和次小距离比值的阈值设成了0.7</li>
+<li>解一个PnP的优化问题，这里<strong>只优化位姿，不优化地图点</strong>。优化后进行外点的剔除</li>
+</ul>
+<p><strong>TrackWithMotionModel</strong></p>
+<p>使用恒速模型用上一帧观测到的地图点来对当前帧进行跟踪。</p>
+<ul>
+<li>首先对上一帧的位姿进行更新。单目情况下这一步只是利用参考关键帧把位姿转换成了相对世界坐标系。</li>
+<li>然后利用速度模型对这一帧的位姿进行估计。恒速模型的假设世界上就是两帧之间的位姿变换是恒定的，即<span class="math inline">\(T_l^c\)</span>，k-1到k帧和k到k+1帧之间不变，通过<span class="math inline">\(T_l^c*T_w^l\)</span>得到估计的<span class="math inline">\(T_w^c\)</span></li>
+<li>利用上一帧地图点进行投影匹配，如果匹配点不够，扩大搜索半径再匹配一次，仍不够则视为失败。这里的匹配和初始化时的匹配调用的都是ORBmatcher::SearchByProjection函数，最小距离和次小距离比值的阈值设为0.9。</li>
+<li>解PnP，优化当前帧位姿，之后进行外点的剔除</li>
+<li>判断是否跟踪成功。SLAM模式下要求筛选后匹配到的地图点多于10个；如果在纯定位模式下，则要求于上一帧的特征点匹配数多于20，如果与地图点的匹配数少于10个，不会认为是失败的，但会认为是不稳定的（mbVO标志量会为真）</li>
+</ul>
+<p><strong>Relocalization</strong></p>
+<p>如果上面的两个模型都不好用，执行重定位，利用BoW找到和当前帧相似的关键帧，使用SearchByBoW进行特征匹配，使用EPnP估计位姿（这种方法既高效又准确），然后进行优化。优化后如果得到的内点数目不足，再度使用SearchByProjection，再匹配一次并进行优化。可以看出这个过程实际上是前面两种模型的一个结合。</p>
+<h4 id="初步位姿估计纯定位模式">2.2）初步位姿估计：纯定位模式</h4>
+<p>如果上一帧的跟踪结果正常（根据mbVO判别）：</p>
+<ul>
+<li>满足恒速模型则使用恒速模型进行估计</li>
+<li>否则使用参考关键帧估计</li>
+</ul>
+<p>如果跟踪的结果已经不稳定（点数少于10个），但并没有失败：</p>
+<ul>
+<li>会同时通过恒速模型和重定位进行位姿估计，只要重定位成功就使用重定位的结果。</li>
+</ul>
+<p>无论是哪种模式，当跟踪失败时都会进行重定位。重定位的基本思路就是将当前帧与存储的关键帧进行匹配，通过EPnP来求解当前帧的位姿。这里的步骤非常繁琐，主要是为了防止错误的重定位出现，因为这会直接导致系统出现非常大的误差。</p>
+<h4 id="位姿优化和localmap维护">3）位姿优化和LocalMap维护</h4>
+<p>TrackLocalMap：对局部地图进行跟踪和维护。</p>
+<ul>
+<li>UpdateLocalKeyFrames：遍历当前帧的地图点，扩充局部地图的关键帧，三种关键帧将被添加：1）观测到地图点的关键帧（称为一级共视帧）；2）一级共视帧的共视点最多的非坏关键帧；3）一级共视帧的一个子关键帧和一个父关键帧。最后会更新当前帧的参考关键帧。如果局部地图的关键帧超过了80帧，只会添加一级共视帧。</li>
+<li>SearchLocalPoints：利用局部地图点进行匹配，得到更多的匹配关系。步骤为：1）首先将已经被识别为当前帧的地图点标识出来；2）将在视野范围内的点加入到备选匹配地图点；3）利用投影得到更多的匹配关系（这里的阈值是0.8）；</li>
+<li>利用新增的匹配关系再次对位姿进行优化</li>
+<li>判断局部地图是否跟踪成功。如果刚刚重定位，会要求跟踪的点多于50，否则只要求对局部地图跟踪点数超过30</li>
+</ul>
+<p>注意这个过程和是否使用纯定位模式无关，纯定位模式下如果跟踪正常且稳定，仍然会进行这一步，也就是说纯定位模式仍然有局部地图的跟踪，区别在于最后一步统计内点时不会要求当前帧观测的地图点有足够多的被观测数量（不知道是不是这个量在纯运动模式下不统计）。</p>
+<h4 id="运动模型更新">4）运动模型更新</h4>
+<p>只有当跟踪成功时会进行下面的步骤：</p>
+<ul>
+<li>首先更新恒速运动的模型。这个恒速按照我的理解实际上是假设两帧之间的T矩阵是不变的。</li>
+<li>然后对地图点进行了维护，删除了当前帧的无效地图点。</li>
+<li>检测是否需要将当前帧插入关键帧，主要的依据是当前帧和其参考关键帧的共视点较少，且当前帧跟踪到的地图点较多。单目情况下插入关键帧会非常频繁。</li>
+<li>清除掉当前帧跟踪的地图点中经过BA后被认为是外点的部分</li>
+</ul>
+<h4 id="位姿更新">5）位姿更新</h4>
+<p>这部分主要是更新了当前帧相对参考关键帧的位姿和相关的状态，这里如果跟踪失败的话，会使用上一次的值作为近似（此时参考关键帧一定是上一帧的参考关键帧）。</p>
+<h2 id="localmapping线程">LocalMapping线程</h2>
+<p>1）首先设置标志位，表示线程忙，不接收Tracking线程发送的关键帧</p>
+<p>2）检测是否有新的关键帧，如果有：</p>
+<ul>
+<li>ProcessNewKeyFrame：处理缓冲区的关键帧，包括计算其词袋模型、增添地图点，通过KeyFrame::UpdateConnections，建立关键帧之间的连接关系，最后将该关键帧插入到地图中</li>
+<li>MapPointCulling：检查新增的地图点，根据其观测情况删除质量不好的点</li>
+<li>CreateNewMapPoints：利用关键帧与相邻关键帧（这里相邻的概念是指在共视图上有边的连接，也就是有共视点的帧）三角化产生新的地图点。这个三角化的过程比较细致，因此在开始前会检测以下是不是有新的关键帧，如果没有的情况下才进行三角化。通过基线长度先筛掉了部分关键帧，然后利用两个关键帧的位姿算了两帧之间的基础矩阵，以此为基础进行匹配和外点的剔除，这里匹配的阈值是0.6，比较严苛。最后会进行三角化，成功的点扩充为备选地图点，等待MapPointCulling函数的检验。</li>
+<li>此时如果已经没有新的关键帧，SearchInNeighbors，将当前帧与两级相邻的关键帧中重复的地图点进行检查和融合。</li>
+<li>如果没有请求停止LocalMapping且已没有更多关键帧，进行LocalBA，优化当前关键帧及其共视帧的位姿（合称LocalKeyFrames）、以及LocalMapPoints的位置，其中所有能观测到LocalMapPoints（也就是LocalKeyFrames看到的所有的地图点）而又不属于LocalKeyFrames的关键帧的位姿保持不变。优化结束后判断当前帧是否是冗余的，如果此帧90%以上的有效地图典都能被至少3个其他关键帧看到，认为此帧冗余，设为bad。</li>
+<li>最后无论如何，新的关键帧都会成为回环的候选帧（只是有些被设置成bad，实际上不会再起作用）。</li>
+</ul>
+<p>3）如果没有新的关键帧，检查是否有停止线程的请求</p>
+<p>4）线程未结束则检查是否要复位（清除关键帧和地图点的缓存）</p>
+<p>5）设置线程为空闲，此时才可以由Tracking线程继续插入关键帧，设置3ms的缓冲时间等待新的关键帧的插入。</p>
+<h3 id="keyframeupdateconnections">KeyFrame::UpdateConnections</h3>
+<p>构建共视图的核心函数，用于建立关键帧之间的连接，主要步骤：</p>
+<ul>
+<li>对当前处理的关键帧，遍历其观测到的所有地图点，统计所有可观测到此点的关键帧与当前关键帧的共视地图点数</li>
+<li>找到共视程度最高的关键帧，期间共视程度大于阈值（15个点）的所有关键帧都会更新与当前帧的共视关系，但此时不更新当前帧到其他帧的连接，只是将这些共视程度高的帧保存下来（可以理解为创建了其他帧到当前帧的单向边）</li>
+<li>如果共视程度理想的帧（大于15点），建立当前帧到共视程度最高关键帧的单向边，否则建立当前帧到满足条件帧的边（这里程序貌似有bug）。如果当前帧是首次被添加到covisibility graph中，会初始化其父帧为共视程度最高的帧，子帧为其自身。</li>
+</ul>
+<h2 id="loopclosing线程">LoopClosing线程</h2>
+<p>1）检测是否有新的关键帧插入（这里的关键帧来自于LocalMapping线程）</p>
+<p>2）如果有新的关键帧，执行DetectLoop：</p>
+<ul>
+<li>取出缓冲中最早的关键帧（将其从缓冲中弹出）</li>
+<li>如果距离上个回环帧不足10帧，退出回环检测</li>
+<li>遍历与当前关键帧共视地图点多于15个的关键帧，使用DBoW2计算其最低得分minScore</li>
+<li>DetectLoopCandidates：找出可能的备选闭环关键帧</li>
+<li>接下来的操作比较复杂，主要是为了进行连续性的检查，经过上面的步骤挑选出来的备选关键帧会进行连续性检查，按照个人的理解，关键帧之间的连接最终形成了一个网状的结构，连续性检查的目的就是为了确定这个备选的关键帧构成的组在网络里和其他的关键帧之间有良好的连接关系，因为如果构成回环，从初始到当前的关键帧一定是相互连接的。</li>
+<li>通过了一致性检查的关键帧不为0，那么就视为发生了闭环，但此时仍不确定和哪一帧闭环</li>
+<li>如果没有通过一致性检查的帧会被认为是不必要的帧，会被设置为可以删除的关键帧，在LocalMapping线程中如果检测到该帧冗余（冗余特征点达到90%以上）就会将其删除掉。</li>
+</ul>
+<p>3）ComputeSim3：求解关键帧和闭环候选帧的Sim3变换</p>
+<ul>
+<li>遍历闭环候选帧集，筛选出与当前帧的匹配特征点数大于20的候选帧集合，并为每一个候选帧构造一个Sim3Solver</li>
+<li>对每一个候选帧进行 Sim3Solver 迭代匹配，直到有一个候选帧匹配成功，或者全部失败。成功的条件为：求解的Sim3变换得到的内点数高于阈值-&gt;利用求解的sim3变换再进行匹配-&gt;利用匹配的结果再优化一次sim3变换-&gt;得到的内点多于20</li>
+<li>取出闭环匹配上关键帧的相连关键帧，得到它们的MapPoints放入 mvpLoopMapPoints</li>
+<li>将闭环匹配上关键帧以及相连关键帧的MapPoints投影到当前关键帧进行投影匹配</li>
+<li>判断当前帧与检测出的所有闭环关键帧是否有足够多的MapPoints匹配（超过40个视为闭环检测成功）</li>
+<li>清空mvpEnoughConsistentCandidates（这里看不懂，注释里说这些帧都会被丢掉，不会加入到后续的闭环检测中，这合理吗？这里并不是说直接删除不用了，而是将这些帧设定为可以剔除的帧，具体删除由LocalMapping线程进行）</li>
+</ul>
+<p>4）如果上一步成功检测到了闭环，执行CorrectLoop：</p>
+<ul>
+<li>通过求解的Sim3以及相对姿态关系，调整与当前帧相连的关键帧位姿以及这些关键帧观测到的地图点位置（相连关键帧---当前帧）</li>
+<li>将闭环帧以及闭环帧相连的关键帧的地图点和与当前帧相连的关键帧的点进行匹配（当前帧+相连关键帧---闭环帧+相连关键帧）<br />
+</li>
+<li>通过MapPoints的匹配关系更新这些帧之间的连接关系，即更新covisibility graph<br />
+</li>
+<li>对Essential Graph（Pose Graph）进行优化，MapPoints的位置则根据优化后的位姿做相对应的调整<br />
+</li>
+<li>创建线程进行全局Bundle Adjustment</li>
+</ul>
+<h4 id="detectloopcandidates">DetectLoopCandidates:</h4>
+<p>找出所有和当前关键帧<strong>没有连接关系</strong>的回环候选帧，步骤如下：</p>
+<ul>
+<li>遍历当前帧的所有单词，找到有公共单词的所有关键帧并统计公共单词数。共视地图点多于15个的帧不会纳入考量范围；</li>
+<li>统计这些备选帧中重复单词数的最大值，将重复单词数大于0.8倍最大值且相似度评分高于前面算的minScore的关键帧进一步挑选出来；</li>
+<li>对每一个备选关键帧，挑选其的最好的10个共视关键帧，统计当前关键帧和这一组关键帧的总得分，记录下最高的总得分bestAccScore；</li>
+<li>取总得分高于0.75倍bestAccScore的组，将这些组中评分最高的关键帧作为最终的闭环候选关键帧。</li>
+</ul>
+<h3 id="关于回环检测的部分要点">关于回环检测的部分要点</h3>
+<p>1）字典的存储格式</p>
+<p>ORB-SLAM2使用了txt格式的词典，在System类初始化的过程中加载了该字典，使用函数为自己编写的loadFromTextFile。ORBvoc.txt中数据格式如下：</p>
+<p>第一行<code>10 6 0 0</code>，</p>
+<ul>
+<li>10-树的分支数，</li>
+<li>6-树的深度，注意这个深度并不包含根结点，所以实际上最后一层的叶子节点个数为<span class="math inline">\(10^6\)</span></li>
+<li>0-scoringType，相似度评分规则，为0表示使用L1范数衡量两个向量的差距</li>
+<li>0-weightingType，单词加权的规则，为0表示使用TF-IDF准则对单词进行加权</li>
+</ul>
+<p>这样的话字典中的单词数最多是<span class="math inline">\(10^6\)</span>个（就是叶子节点的个数），实际测试了一下是97万多，意味着不是每个叶子节点都在最深层。</p>
+<p>后续行：<code>0 0 ... 0</code></p>
+<ul>
+<li>第一个0表示节点的父节点</li>
+<li>第二个0表示节点是否为叶子节点，即word</li>
+<li>中间的一长串表示该节点对应的ORB特征，此处为32位，需要4个字节来保存</li>
+<li>最后一位表示该节点的权重</li>
+</ul>
+<p>2）BoW的计算</p>
+<p>Frame::ComputeBoW会计算一帧特征点生成的词袋，主要计算的是mBowVec和mFeatVec，BowVector存储的是单词的id（在至多<span class="math inline">\(k^d\)</span>个叶子节点中选取）和其权重（比如用TF-IDF生成的值）；FeatureVector存储的是倒数第四层（可自选）的节点id和该节点下的特征点在帧中的id。</p>
+<h2 id="类和对象的说明">类和对象的说明</h2>
+<p>MapPoint：地图点类，该类包含的主要属性包括</p>
+<ul>
+<li>mWorldPos：地图点的世界坐标</li>
+<li>mpRefKF：生成地图点的关键帧</li>
+<li>mpMap：所在的地图</li>
+<li>nobs：被观测的次数</li>
+<li>mObservations：观测到该地图点的关键帧以及在关键帧下的特征点id</li>
+<li>mDescriptor：地图点对应的最有代表性的描述子，每次插入关键帧后会重新计算，取到其他描述子的距离中值最小的作为该地图点的描述子。</li>
+<li>mNormalVector：地图点的平均观测方向，在世界坐标下表示</li>
+</ul>
+<p>KeyFrame：关键帧类，包含的主要属性和对象为：</p>
+<ul>
+<li>一个图像帧Frame的全部信息</li>
+<li>关键帧所属的地图对象</li>
+<li>mpKeyFrameDB：对应的KeyFrameDatabase对象，实际上所有的关键帧指向的KFDatabase对象是同一个，该对象的mvInvertedFile数组的第i个位置纪录了第i个word对应的所有关键帧</li>
+<li>mnId：对应的关键帧id</li>
+<li>nmFrameId：对应的Frame的id</li>
+<li>mvpMapPoints：数组第i个位置存储的地图点对应该关键帧观测到的第i个特征点，实际上进行了2D点和3D点的对应</li>
+<li>mConnectedKeyFrameWeights：纪录了该关键帧与其他关键帧之间的连接，其权重为两帧间共视特征点的数量。</li>
+<li>mParent：初始化时会将与当前帧共视地图点最多的帧作为父关键帧</li>
+<li>mspChildrens：对应的子关键帧</li>
+</ul>
+<h3 id="局部地图的更新策略">局部地图的更新策略</h3>
+<ul>
+<li>在初始化时前两帧会插入局部地图，初始地图中的所有点都成为局部地图点。</li>
+</ul>
+<p>纯运动模式下局部地图的更新策略：</p>
+<ul>
+<li>仍然会利用已有的关键帧，通过局部地图进行匹配和优化</li>
+<li>不再进行关键帧的扩充（注意这里的关键帧是指全部的关键帧，而局部地图的关键帧只保留了其中的一部分，也就是说局部地图仍然会从已有的关键帧队列中挑选满足条件的帧进行扩充，但不会有新的关键帧插入）</li>
+</ul>
+<h3 id="共视图本质图扩展树">共视图、本质图、扩展树</h3>
+<p><strong>共视图（Covisibility Graph）</strong></p>
+<p>共视图是无向加权图，每个节点是关键帧，如果两个关键帧之间满足一定的共视关系（至少15个共同观测地图点），它们就连成一条边，边的权重就是共视地图点的数目。</p>
+<p>共视图在ORB_SLAM2中的作用：</p>
+<ol type="1">
+<li>在跟踪线程中，通过updateLocalKeyFrames利用当前帧的共视关键帧查找更多的局部地图点，扩大跟踪的范围。</li>
+<li>在局部建图线程中，与共视关键帧之间进行三角化补充更多的地图点</li>
+<li>在局部建图线程中融合重复的MapPoints</li>
+<li>在闭环检测时利用共视关系</li>
+</ol>
+<p><strong>本质图（Essential Graph）</strong></p>
+<p>本质图是共视图的子图，只保留了共视图中联系紧密的边。本质图中包含了:</p>
+<ol type="1">
+<li>Spanning tree连接关系</li>
+<li>形成闭环的连接关系，闭环后地图点变动后新增加的连接关系</li>
+<li>共视关系非常好（至少100个地图点）的连接关系</li>
+</ol>
+<p>本质图的作用：在闭环校正时，用相似变换来矫正尺度漂移，把闭环误差均摊在本质图中。使用本质图进行BA优化可以实现快速的收敛，并且结果更加精确。</p>
+<p><strong>扩展树（Spanning Tree）</strong></p>
+<p>所有关键帧之间形成的一个继承关系的描述，或者说是所有父关键帧的连接关系，可以理解成从爷爷到父亲到孙子...的连接关系。</p>
+<p>扩展树的主要作用是在优化的时候为本质图添加一些父子关系构成的边，希望有父子关系的关键帧之间的位姿误差最优化。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/SLAM/" rel="tag"># SLAM</a>
+              <a href="/tags/ORB-SLAM2/" rel="tag"># ORB-SLAM2</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/%E7%9C%9F%E5%AE%9E%E7%9A%84%E8%89%BA%E6%9C%AF.html" rel="prev" title="真实的艺术">
+      <i class="fa fa-chevron-left"></i> 真实的艺术
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#orb-slam2%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0"><span class="nav-number">1.</span> <span class="nav-text">ORB-SLAM2源码阅读笔记</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E5%87%BD%E6%95%B0"><span class="nav-number">1.1.</span> <span class="nav-text">主函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tracking%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.2.</span> <span class="nav-text">Tracking线程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#orb%E7%89%B9%E5%BE%81%E7%82%B9%E7%9A%84%E6%8F%90%E5%8F%96"><span class="nav-number">1.2.1.</span> <span class="nav-text">ORB特征点的提取</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#trackingtrack%E5%87%BD%E6%95%B0"><span class="nav-number">1.2.2.</span> <span class="nav-text">Tracking::Track函数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">1) 初始化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9D%E6%AD%A5%E4%BD%8D%E5%A7%BF%E4%BC%B0%E8%AE%A1slam%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">2.1）初步位姿估计：SLAM模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9D%E6%AD%A5%E4%BD%8D%E5%A7%BF%E4%BC%B0%E8%AE%A1%E7%BA%AF%E5%AE%9A%E4%BD%8D%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.2.2.3.</span> <span class="nav-text">2.2）初步位姿估计：纯定位模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%8D%E5%A7%BF%E4%BC%98%E5%8C%96%E5%92%8Clocalmap%E7%BB%B4%E6%8A%A4"><span class="nav-number">1.2.2.4.</span> <span class="nav-text">3）位姿优化和LocalMap维护</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%90%E5%8A%A8%E6%A8%A1%E5%9E%8B%E6%9B%B4%E6%96%B0"><span class="nav-number">1.2.2.5.</span> <span class="nav-text">4）运动模型更新</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%8D%E5%A7%BF%E6%9B%B4%E6%96%B0"><span class="nav-number">1.2.2.6.</span> <span class="nav-text">5）位姿更新</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#localmapping%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.3.</span> <span class="nav-text">LocalMapping线程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#keyframeupdateconnections"><span class="nav-number">1.3.1.</span> <span class="nav-text">KeyFrame::UpdateConnections</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#loopclosing%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.4.</span> <span class="nav-text">LoopClosing线程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#detectloopcandidates"><span class="nav-number">1.4.0.1.</span> <span class="nav-text">DetectLoopCandidates:</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E5%9B%9E%E7%8E%AF%E6%A3%80%E6%B5%8B%E7%9A%84%E9%83%A8%E5%88%86%E8%A6%81%E7%82%B9"><span class="nav-number">1.4.1.</span> <span class="nav-text">关于回环检测的部分要点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B1%BB%E5%92%8C%E5%AF%B9%E8%B1%A1%E7%9A%84%E8%AF%B4%E6%98%8E"><span class="nav-number">1.5.</span> <span class="nav-text">类和对象的说明</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B1%80%E9%83%A8%E5%9C%B0%E5%9B%BE%E7%9A%84%E6%9B%B4%E6%96%B0%E7%AD%96%E7%95%A5"><span class="nav-number">1.5.1.</span> <span class="nav-text">局部地图的更新策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B1%E8%A7%86%E5%9B%BE%E6%9C%AC%E8%B4%A8%E5%9B%BE%E6%89%A9%E5%B1%95%E6%A0%91"><span class="nav-number">1.5.2.</span> <span class="nav-text">共视图、本质图、扩展树</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Qxz</p>
+  <div class="site-description" itemprop="description">Nobody exists on purpose.Nobody belongs anywhere.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/QuXuzhong" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;QuXuzhong" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.zhihu.com/people/qu-xu-zhong-83" title="Zhihu → https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;qu-xu-zhong-83" rel="noopener" target="_blank"><i class="fab fa-zhihu fa-fw"></i>Zhihu</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Qxz</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
