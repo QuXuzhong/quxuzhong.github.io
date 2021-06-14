@@ -1168,7 +1168,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #ffd24a;
+  background: #9fffc1;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
@@ -2407,10 +2407,10 @@ body {
   border-radius: 1em;
 }
 .post-body {
-  color: #fff;
+  color: #bfbfbf;
 }
 body {
-  color: rgba(0,0,0,0) 0;
+  color: #fff;
   font-size: 1em;
 }
 .posts-expand .post-title-link {
@@ -2427,4 +2427,29 @@ body {
   font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 1.2em;
   text-align: center;
+}
+.menu .menu-item a {
+  color: #000;
+}
+element.style {
+  background-color: #43413f;
+  color: #fff f;
+}
+.btn:hover {
+  border-color: #fff;
+  color: #222;
+  background: #fff;
+}
+a,
+span.exturl {
+  overflow-wrap: break-word;
+  overflow-wrap: break-word;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  background-color: transparent;
+  color: #fff;
+  text-decoration: none;
+  outline: none;
+  border-bottom: 1px solid #949494;
+  cursor: pointer;
 }
