@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"shisirqxz.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","width":240,"display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="VINS-MONO代码阅读笔记 之前看过一版改写的不需要使用ROS的VINS-MONO笔记，后面对ROS熟悉一些以后直接开始上手看ROS版本的源码，重新整理一下。 VINS的主要线程有四个：前端图像跟踪线程（对应feature_tracker_node.cpp）、后端非线性优化线程（初始化和IMU预积分都在此线程中进行）、闭环检测线程以及位姿图优化线程。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="VINS-MONO源码阅读笔记">
+<meta property="og:url" content="https://shisirqxz.com/VINS-MONO%EF%BC%88ROS%E7%89%88%E6%9C%AC%EF%BC%89.html">
+<meta property="og:site_name" content="Qxz&#39;s Blog">
+<meta property="og:description" content="VINS-MONO代码阅读笔记 之前看过一版改写的不需要使用ROS的VINS-MONO笔记，后面对ROS熟悉一些以后直接开始上手看ROS版本的源码，重新整理一下。 VINS的主要线程有四个：前端图像跟踪线程（对应feature_tracker_node.cpp）、后端非线性优化线程（初始化和IMU预积分都在此线程中进行）、闭环检测线程以及位姿图优化线程。">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-07-02T06:51:51.616Z">
+<meta property="article:modified_time" content="2021-07-02T06:51:34.220Z">
+<meta property="article:author" content="Qxz">
+<meta property="article:tag" content="SLAM">
+<meta property="article:tag" content="VINS-MONO">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://shisirqxz.com/VINS-MONO%EF%BC%88ROS%E7%89%88%E6%9C%AC%EF%BC%89.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>VINS-MONO源码阅读笔记 | Qxz's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Qxz's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://shisirqxz.com/VINS-MONO%EF%BC%88ROS%E7%89%88%E6%9C%AC%EF%BC%89.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Qxz">
+      <meta itemprop="description" content="Nobody exists on purpose.Nobody belongs anywhere.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Qxz's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          VINS-MONO源码阅读笔记
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-07-02 14:51:51 / Modified: 14:51:34" itemprop="dateCreated datePublished" datetime="2021-07-02T14:51:51+08:00">2021-07-02</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="vins-mono代码阅读笔记">VINS-MONO代码阅读笔记</h1>
+<p>之前看过一版改写的不需要使用ROS的VINS-MONO笔记，后面对ROS熟悉一些以后直接开始上手看ROS版本的源码，重新整理一下。</p>
+<p>VINS的主要线程有四个：前端图像跟踪线程（对应feature_tracker_node.cpp）、后端非线性优化线程（初始化和IMU预积分都在此线程中进行）、闭环检测线程以及位姿图优化线程。</p>
+<span id="more"></span>
+<h2 id="各线程流程">各线程流程</h2>
+<h3 id="前端图像跟踪线程">前端图像跟踪线程：</h3>
+<p>对应feature_tracker node中的各个.cpp和.h文件，线程的入口在feature_tracker_node.cpp中，此线程主要完成了图像特征提取和跟踪的任务。</p>
+<h4 id="main函数">main函数</h4>
+<p>-&gt; 首先读入参数，然后判断是否用启用鱼眼mask来处理噪声</p>
+<p>-&gt; 初始化一个subscriber，订阅的话题名字由对应的yaml文件中读入。注册img_callback回调函数。</p>
+<p>-&gt; 初始化Publisher pub_img，用于发布名为feature的话题，队列长度为1000。这里的消息类型是PointCloudPtr，存储了当前帧的header（包括了时间戳等信息）以及看到特征点的归一化坐标、速度和2d坐标（u,v），这些信息会用于后端优化。</p>
+<p>-&gt;初始化Publisher pub_match，用于发布名为feature_img的话题，消息类型是图像Image，用于RVIZ中的显示和调试，其中跟踪时间越久的点，在图像上颜色越红，刚刚初始化的点会是蓝色。</p>
+<p>-&gt;初始化Publisher pub_restart，用于发布名为restart的话题，消息类型是一个布尔值，用于设置是否重新初始化前端。</p>
+<p>之后就是调用ros::spin，循环执行回调函数。</p>
+<h4 id="回调函数img_callback">回调函数img_callback</h4>
+<p>（<u>这个话题是由哪个函数发布的？</u></p>
+<p>订阅的消息类型是ROS内部定义好的ImageConstPtr类型，指向一帧图像的数据。</p>
+<p>-&gt; 首先判断是否是第一帧，若是，纪录下第一个图像帧的时间并返回；</p>
+<p>-&gt; 判断图像是否连续，如果当前帧距离上一帧过去了超过1s，或者当前帧的时间戳比上一帧更早，发布restart的消息。</p>
+<p>-&gt; 设计了一个频率控制的方法。用发布次数/（当前帧时间戳-第一帧时间戳）来计算发布的频率，此频率不大于设定的频率（10Hz）时会进行特征点的发布，如果非常接近设定的频率，会更新第一帧的时间戳并清空发布次数。这里的逻辑是，如果各帧之间时间比较长（又没有长到不满足前面图像连续性）就进行特征点的发布。但是这样做，随着时间的累计，会导致当前帧和上一帧之间的间隔影响越来越弱，比如当前帧和上一帧时间间隔非常小，理论上我们不希望发布它，但是平均以后还是满足频率控制条件，因此要对第一帧的时间戳不断更新，保证频率的稳定。</p>
+<p>-&gt; readImage读入图像并进行处理，这是特征点跟踪的主要实现函数</p>
+<ul>
+<li>首先对图像进行直方图均衡化</li>
+<li>然后利用自带的LK光流法进行特征点跟踪（这里有一个trick，设置了一个图像的边界，程序里取了1，相当于在图像最外圈的点不要，可能是认为这些点不够稳定）</li>
+<li><strong>如果满足频率控制条件</strong>，即需要发布特征点：1）两帧之间的点转换为归一化坐标，然后通过基础矩阵来去除outliers；2）每个跟踪到的点周围会设置30*30大小的掩码，只保留每个区域内跟踪长度最长的点；3）只要点数没有达到设定值，就通过goodFeatures补充一些点，将检测到的点补充到特征点容器中，id置为-1，跟踪长度置为1。</li>
+<li>进行畸变校正，将点都转换到相机的归一化坐标系上，计算特征点的速度。（由于算法都是考虑静态特征点设计的，这个特征点的速度实际大小就是相机的速度在归一化尺度上的大小）</li>
+</ul>
+<p>-&gt; 更新那些补充的点的id，注意这个补充过程只有当有特征点发布的时候才会进行。</p>
+<p>-&gt; <strong>如果满足频率控制条件</strong>：将特征点封装为PointCloudPtr类型并发布。如果开启了显示，还会一并通过pub_match发布跟踪点图像。</p>
+<h3 id="视觉惯性里程计">视觉惯性里程计</h3>
+<h4 id="main函数-1">main函数</h4>
+<p>-&gt; 首先读入参数，并为优化器设置参数。将重投影误差的协方差大小设定成了1.5个像素对应的大小，用于优化时马氏距离的计算。</p>
+<p>-&gt; 初始化多个subscriber，分别订阅了IMU_TOPIC（用于读入IMU数据）、feature(用来从前端获取特征点)、restart（用于读入前端的重启标志）、match_points（用来从pose_graph_node中获取回环匹配信息）</p>
+<p>-&gt; 创建VIO主线程，循环调用process函数</p>
+<p>其中各回调函数的具体功能</p>
+<p><strong>imu_callback</strong></p>
+<p>接收ImuConstPtr类型的消息，将IMU测量信息入队，并且利用中值积分直接递推位姿。如果此时已经成功初始化，会发布这个位姿。（这里应该只是为了做可视化或者与优化后的结果进行对比进行的积分，和后续的优化过程没有关系）</p>
+<p><strong>feature_callback</strong></p>
+<p>把从前端接收到的特征点信息入队。</p>
+<p><strong>restart_callback</strong></p>
+<p>如果前端发出重置指令，将所有的缓存清除，重置估计器参数和时间。</p>
+<p><strong>relocalization_callback</strong></p>
+<p>把重定位得到的数据存入缓存。</p>
+<h4 id="里程计主要流程">里程计主要流程</h4>
+<h5 id="获取测量信息">获取测量信息</h5>
+<p>对应estimator_node中的process函数，主要实现了视觉惯性里程计后端的功能。</p>
+<p>-&gt; getMeasurements()：获取测量数据，采用了队列结构保存读取的数据，队首是最早的时间戳，队尾是最晚的。由于IMU的频率远高于图像，因此两帧图像之间保存了一个IMU数据构成的数组</p>
+<p>存储的基本逻辑：</p>
+<ul>
+<li>1.用两个队列imu_buf和feature_buf分别保存了IMU的数据和图像数据。</li>
+<li>2.如果IMU队列队尾元素的时间戳&lt;=图像队列最早的时间戳，无法对齐，返回空，进行等待计数。理论上只发生在最开始没有对齐的情况下</li>
+<li>3.如果IMU队列队首元素时间戳&gt;=图像队列队首的时间戳，丢掉一帧图像，图像队列进行弹出，但循环继续。理论上只发生在刚刚开始的时候。</li>
+<li>4.如果2、3都不满足，那么即是IMU最早的时刻早于图像最早的时刻，最晚的时刻晚于图像最早的时刻，意味着至少有一帧图像可以与IMU对齐，进行对齐，把时间比图像早的IMU数据都保存并出队。第一个比图像晚的IMU数据会保存但不会出队，这意味着下一帧图像也会用这个信息。</li>
+</ul>
+<h5 id="预积分">预积分</h5>
+<p>接下来进行预积分的过程，对比图像晚的那一帧IMU数据，会<strong>利用线性近似计算</strong>一个图像对应时刻的IMU测量值完成到图像时刻的预积分。</p>
+<p>-&gt; processIMU：对获取的IMU数据逐步进行预积分。检查一下对应的frame_count图像帧是否开始了预积分，若未开始先实例化一个新的积分对象，在frame_count不为0的情况下（第0帧没有速度值），向缓存数组中写入此时刻IMU数据<span class="math inline">\(a,\omega,dt\)</span>，开始预积分。</p>
+<ul>
+<li>propogate：进行预积分过程，在上一imu测量时刻的预积分结果的基础上通过中值积分递推一步，更新frame_count帧对应的预积分结果。同时还会更新预积分值噪声（崔的博客中将其称为误差，二者本质上是相同的）的协方差矩阵和噪声对误差状态的Jacobian矩阵（这里主要是为了获得对bias变化量的Jacobian矩阵）。</li>
+</ul>
+<p>上一帧到当前帧的预积分结果会保存到一个tmp_pre_intergration对象中，同时滑窗中的所有帧的预积分结果保存在pre_intergrations数组中完成预积分之后进行了重定位信息的添加，然后从前端得到的img_msg中读取了特征的信息并保存起来，以待下一步处理。</p>
+<h5 id="初始化和紧耦合优化">初始化和紧耦合优化</h5>
+<p>-&gt; Estimator::processImage：处理图像特征数据，进行视觉惯性联合初始化，进行基于滑动窗口非线性优化的紧耦合VIO</p>
+<ul>
+<li><p>FeatureManager::addFeatureCheckParallax：检查次新帧是否是关键帧，以此决定边缘化的策略。次新帧在以下几种情况会被认为是关键帧：1）如果次新帧是解算开始的第一帧或者当前帧成功跟踪到次新帧的点数少于20；2）次新帧和次次新帧没有共视点；3）次新帧和次次新帧之间的视差足够大。如果次新帧是关键帧，边缘化最旧的帧，否则边缘化次新帧。</p></li>
+<li><p>InitialEXRotation::CalibrationExRotation：对外参进行标定，标定的核心公式为 <span class="math display">\[
+R_{b_k}^{b_{k+1} }R_c^b=R_c^bR_{c_k}^{c_{k+1} }
+\]</span> 利用预积分得到两帧之间载体系的位姿变换，利用两帧之间点的匹配求解本质矩阵并分解得到相机系之间的姿态变换，就可以对外参进行标定。每当拿到新的帧就再解一次这个最小二乘问题，直到帧数多于窗口长度并且第二大的奇异值足够大时才认为标定成功（<u>第二大的奇异值的含义是什么？？</u>）</p></li>
+<li><p>Estimator::InitialStructure()：只有当有足够多的帧（多于窗口长度）并且已经成功标定了外参、时间距离足够长的情况下，会尝试调用此函数，实现sfm+视觉惯性联合初始化，具体步骤为：</p>
+<p>-&gt; 先判断是否充分激励（线加速度大小合适），否则初始化失败</p>
+<p>-&gt; Estimator::relativePose：找出满足与当前帧匹配点数够多（超过20个）、又保证视差足够大的最早帧<span class="math inline">\(c_l\)</span>作为参考帧。利用对极几何求解当前帧到参考帧的变换矩阵</p>
+<p>-&gt; GlobalSFM::construct：纯视觉的sfm过程。按下面的步骤反复进行三角化和位姿求解</p>
+<ol type="1">
+<li>先用参考帧和当前帧进行三角化，得到第一批三角化成功的点</li>
+<li>之后进行反复循环，对参考帧之后的某帧<span class="math inline">\(c_i\)</span>，首先利用当前已经三角化成功的点解PnP得到这一帧的位姿，之后利用<span class="math inline">\(c_i\)</span>与当前帧的位姿再三角化更多的点。</li>
+<li>经过前两步，得到了<span class="math inline">\(c_{l+1}...\)</span>等帧的位姿，再利用<span class="math inline">\(c_l\)</span>与<span class="math inline">\(c_{l+1}\)</span>，<span class="math inline">\(c_l\)</span>与<span class="math inline">\(c_{l+2}\)</span>...的位姿对其共视特征点进行三角化。</li>
+<li>再从l-1帧开始逆序进行先三角化再PnP的过程</li>
+<li>最后，对剩余仍未三角化成功的点，利用观测到该点的第一帧和最后一帧的位姿进行三角化，至此，所有<strong>观测次数超过2次</strong>的特征点都成功三角化，滑窗中所有帧的位姿也成功求解。</li>
+<li>进行一次总体的BA优化，优化时固定了参考帧的R、t和当前帧的t。对其余的位姿和点的坐标进行了优化。</li>
+</ol>
+<p>整个过程遇到两种情况会失败：1）求解PnP时两帧间的共视特征点不足，PnP求解失败；2）优化后的残差不满足条件。SFM成功后，由于在上面的过程中相当于把<span class="math inline">\(c_l\)</span>视为了世界坐标系完成了sfm过程，之后将得到的位姿都转换成了各帧到<span class="math inline">\(c_l\)</span>帧的位姿变换</p>
+<p>-&gt; 前面求解的是滑窗中帧的位姿，但由于sfm失败时会边缘化掉最早的一帧，因此在成功的sfm之后会再对所有记录的图像帧再进行一次PnP求解位姿（滑窗中的关键帧不会再进行PnP），并且将它们在all_image_frame中的位姿保存成了<span class="math inline">\(R_{b_i}^{c_l},t_{c_i}^{c_l}\)</span>（这里位姿表示没有统一起来，完全是出于后续进行视觉惯性对齐的时候列方程比较方便）</p>
+<p>-&gt; Estimator::visualInitialAlign：进行视觉惯性联合初始化</p>
+<ul>
+<li><p>VisualIMUAlignment：利用预积分和SFM结果联合求解陀螺零偏、各帧速度、重力加速度和尺度因子。</p>
+<p>-&gt; sloveGyroscopeBias：利用求解的相机位姿和预积分的结果对陀螺仪的零偏进行了标定。主要用到了旋转量的预积分结果和视觉解算的旋转联立方程，用到了预积分求得的对<strong>零偏变化量的Jacobian矩阵</strong>。在标定完成后调用repropogate重新进行了预积分过程（<u>这里是确实重新积分了，而不是用Jacobian进行近似的</u>），同样这里对all_image_frame中的所有位姿都重新进行了预积分，下一步仍须使用这些预积分项。</p>
+<p>-&gt; LinearAlignment：求解和优化重力、速度和尺度因子。重力表示在<span class="math inline">\(c_l\)</span>帧下，速度为<span class="math inline">\(v_{b_i}^{b_i},v_{b_j}^{b_j}\)</span>，都是载体系下的向量；尺度因子为从相机坐标系到真实世界系之间的尺度关系。使用了p、v对应的预积分项和有视觉解算的对应项得到约束。初步求解后，进一步细化了重力矢量，由于重力大小是固定的，实际上应当只有两个自由度，为此在其切空间上重新参数化并求解</p></li>
+</ul>
+<p>初始化在以下几种情况下可能会失败：1）细化后的重力矢量模的大小与细化之前差距太大；2）初始化的尺度因子小于0。如果解算正常，那么求解特征点的深度（<strong>注意前面的sfm过程中的三角化结果并不会保存为点的深度，因为尺度还没修正</strong>）</p>
+<p>-&gt; FeatureManager::triangulate：在调用此函数前先将feature对象中所有点的三角化结果清空，之后利用特征点的若干帧观测对其进行三角化，三角化的深度为在该点第一次被观测到的相机坐标系下的深度。</p>
+<p>三角化之后对<strong>滑窗内的帧</strong>重新进行了预积分（这里似乎有些重复，毕竟前面对全部帧都重新积分过了），然后将求得的位姿全部转换到了真实的世界坐标系下（重力方向为001，初始偏航角为0）。此前求解过程中选取的世界坐标系一直都是<span class="math inline">\(c_l\)</span>的相机坐标系，这里首先求一个旋转使得单位重力矢量变成（0，0，1），然后对<span class="math inline">\(R_{b_0}^w=R_{c_l}^wR_{b_0}^{c_l}\)</span>进行分解得到偏航角，接着通过逆变换把偏航角归0，最终得到了一个将<span class="math inline">\(c_l\)</span>系转换为一个水平且初始偏航角为0的坐标系的变换，滑窗内的PVQ都左乘这个变换，位姿就表示在了水平的世界坐标系下。至此完成了视觉惯性的联合初始化。</p></li>
+<li><p>Estimator::solveOdometry 如果初始化成功，进行三角化和优化的过程</p>
+<p>-&gt; FeatureManager::triangulate：事实上如果是刚刚初始化成功，此时应该所有可以三角化的点都已经被成功三角化了，调用此函数应该不会再有新的三角化结果（程序会一直continue）。</p>
+<p>-&gt; Estimator::optimization：进行非线性优化，待优化的变量包括：1）滑窗中各帧的PVQ和零偏；2）如果外参不是给定的，还会将外参也添加到优化量中。同样这里的位姿是7维，考虑多出的自由度和位姿无法简单相加，定义了本地参数类实现位姿的加法、Jacobian求导等等。3）如果开启了时间偏差估计，会将td也添加到估计量中；4）特征点的逆深度</p>
+<p>添加的残差包括：</p>
+<p>1）视觉重投影误差：特征点在滑窗内各帧间的重投影误差。--》此项可用于优化关键帧的位姿、外参以及特征点的逆深度</p>
+<p>2）IMU测量残差：对应前面预积分的结果，构成一个优化问题。计算马氏距离时使用了预积分时推导的协方差矩阵。--》此项用于优化两个时刻的PVQ和零偏（两个时刻的零偏）</p>
+<p>3）边缘化的先验信息：把边缘化之后固定下来的Jacobian和残差作为先验的约束信息添加到优化器中进行优化。</p>
+<p>4）快速重定位信息：从后端得到了一个历史回环帧</p>
+<p>-&gt; double2vector：由于eigen需要的优化参数都是double数据，这里将double数组重新转换回vector，<u>为了防止零空间发生变化，固定了优化前后第一帧的位姿不变</u>。如果有重定位信息时，会纪录优化前后回环的两帧之间的位姿漂移。</p>
+<p>-&gt; 接下来进行边缘化的操作。边缘化的本质是将要移除的帧对应的观测信息保留下来，但不再更新移除的帧或地图点本身的信息。实际采用的方法是Schur分解，<strong>这一分解过程可能会使一些不相关的状态相关起来</strong>，因而会产生H矩阵稠密的问题。</p>
+<p>VINS-MONO中边缘化策略分两种情况：</p>
+<ul>
+<li>如果次新帧不是关键帧，保留其IMU测量（<u>没看出来到底保存在哪里了</u>），丢弃该帧的视觉测量，单纯地进行一个Schur分解（不会引入新的约束）</li>
+<li>如果次新帧是关键帧，边缘化最老的帧，将相关的信息作为先验项保存。每次边缘化的先验值主要由以下几部分构成：1）上一时刻的先验残差；2）对应IMU残差的预积分项；3）对应视觉残差的测量，挑选出被删除帧观测到的地图点，其他帧关于这些地图点与被删除帧的共视测量都会被边缘化。</li>
+</ul></li>
+<li><p>SlideWindow：优化过程结束，移动滑窗准备进行下一次更新。特征点的删除会在这一步中进行，如果特征点只在要被删除的帧中有观测，这个特征点会被移除。此外如果三角化失败的点也会被移除（这个条件其实非常严苛，由于累计帧数超过窗口长度才开始初始化，初始化时一个特征点可能有非常多的观测，但当初始化完成之后一个点第一次三角化只用了两帧之间的观测，如果这个三角化失败，这个点就会被直接删掉，否则之后通过优化对其进行反复的更新，而不会重新三角化。）</p></li>
+</ul>
+<p>如果已经初始化成功，会直接通过solveOdometry进行优化。优化结束后会对当前状态的合理性进行检测</p>
+<p>-&gt; failureDetection：在以下几种情况下认为系统失准，会重新开始初始化的流程：1）跟踪点数小于2；2）零偏的模值太大；3）相机位置相对上一时刻的差值超过5米；4）相对上一帧姿态变化超过50度。</p>
+<h4 id="边缘化与fej">边缘化与FEJ</h4>
+<p>其实从原理上分析，边缘化和FEJ是息息相关的，边缘化的过程本质上就是FEJ的应用，所有与被删除帧相关的量测，其Jacobian都是在被边缘化时刻的状态上进行展开的，在此后的过程中，这部分信息成为先验信息，<strong>线性化点就固定了下来</strong>。这其实就是一个FEJ的过程，然而这是不得已而为之，因为这个线性化点已经<strong>被删除</strong>了，不可能再优化后展开了。</p>
+<p>然而这会牵扯出另一个问题，就像<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/158907147">这篇文章</a>中指出，如果相机位姿<span class="math inline">\(T_i\)</span>参与过了边缘化过程，且<span class="math inline">\(T_{i+1}\)</span>与<span class="math inline">\(T_i\)</span>产生了新的约束，在优化过程中，<span class="math inline">\(T_i\)</span>与之前位姿的约束都已经成为先验项，其线性化点是固定的，而新产生的约束按照一般优化的思路，其线性化点会随着优化过程不断发生变化，最终可能会导致可观性出现问题。针对这个问题同样可以使用FEJ，新产生的约束其线性化点固定在优化之前的位姿<span class="math inline">\(T_i\)</span>上，迭代过程中不再变化。但是秦博实际测试的时候发现使用FEJ效果反而变差了，所以没有采用这个思路。（但我对这种说法有点疑问，实际上新的测量展开的线性化点已经不是求先验信息时候固定的那个点了，哪怕在之后的优化中保持不变，二者仍然不是在同一点线性展开的，无非是不会反复更换线性化点而已）</p>
+<h4 id="代价函数设置">代价函数设置</h4>
+<p>针对不同的问题，后端设计了两种代价函数：ProjectionFactor和ProjectionTdFactor，后者在前者基础上提供了对时间戳标定的支持。代价函数的本质是重投影误差，翻到一篇详细介绍这部分内容的<a target="_blank" rel="noopener" href="https://www.cnblogs.com/glxin/p/11990551.html">blog</a>作为参考。</p>
+<p>ProjectionFactor中，残差是2维的重投影误差，待优化的变量包括：<span class="math inline">\(T_i,T_j\)</span>共14维，IMU到相机的外参7维，以及点的逆深度，1维。注意由于用四元数来表示姿态，一帧的位姿是7维，但是这样表示是有冗余的，输入的Jacobian矩阵实际上都是对扰动的<strong>李代数</strong>的求导，如果直接拿来做优化肯定不对，但是ceres库本身针对这个问题做了处理，LocalParameterization类可以实现泛化的加法运算以及参数关于切空间参数的Jacobian矩阵，因此虽然输入的是四元数，但是仍然能完成正确的解算过程。</p>
+<p>关于重投影误差的实际计算过程，VINS-MONO中使用的不是在归一化相平面上的重投影误差，为了兼容鱼眼相机、广角相机，重投影误差投影到了归一化球体的切平面上，将点在第j帧下的坐标进行归一化，得到归一化的观测值和计算值，然后求出计算值（重投影坐标）对应单位球面的切平面的一组正交基，将重投影误差投影到这一组正交基上。</p>
+<h4 id="预积分总结"><strong>预积分总结</strong></h4>
+<p>预积分的公式邱博发过一篇非常详细的说明了，总结一下各位大佬从不同角度对预积分方法的看法：</p>
+<p>-&gt; 预积分的初衷在于借鉴SLAM图优化的思想，将帧与帧之间的位姿转换为约束节点（载体位姿）的边参与到优化中。</p>
+<p>-&gt; 预积分处理帧与帧之间的相对测量，使得其与绝对位姿解耦（或者只需要线性运算就可以进行校正，从而大大提高优化速度。</p>
+<p>-&gt; 预积分使得本来是个麻烦的重力测量变成了一个有利的条件，因为重力使整个系统的绝对姿态（指俯仰角和横滚角）变得可观了</p>
+<p><strong>预积分实现</strong>：</p>
+<p>最早提出预积分的文章中是通过欧拉积分(Euler method)进行实现的，找到一篇博客大致概括了各种积分方法的不同（感觉自己的数值分析白上了）-&gt;<a target="_blank" rel="noopener" href="http://www.liuxiao.org/2018/05/%E6%AC%A7%E6%8B%89%E7%A7%AF%E5%88%86%E3%80%81%E4%B8%AD%E7%82%B9%E7%A7%AF%E5%88%86%E4%B8%8E%E9%BE%99%E6%A0%BC%EF%BC%8D%E5%BA%93%E5%A1%94%E7%A7%AF%E5%88%86/">SLAM常用的数值积分方法</a>，本质上不同的积分方法就是取了不同的方法来用折线拟合直线。邱博的文章也是用欧拉法的公式进行推导的，但是VINS-MONO中预积分采用了中值积分进行，因此得到的形式有所不同。</p>
+<p>预积分的核心是：从惯导的递推方程中分离出了一部分不变的量，这部分量一方面可以由惯导积分获得，另一方面可以通过视觉解算的位姿得到，由此有效形成了一个优化问题，并且可以借此实现视觉惯性的对齐，标定出尺度、速度、重力矢量。</p>
+<p>预积分的实现大致遵循下面的思路：</p>
+<ul>
+<li>首先推导出从i时刻到j时刻离散形式的惯导积分方程，然后将方程中跟初值无关的项整理出来，这些项就称为预积分项。</li>
+<li>将预积分项分成两部分，即理想值+噪声的形式。也就是公式变成了理论值=测量值+噪声项（广义+）的部分，推导证明pvq预积分项的噪声仍然是高斯白噪声，并且可以得到其测量噪声的协方差递推方程。到这一步，如果我们认为陀螺仪和加速度计的零偏是不变的，实际上我们就已经得到了一个初步的预积分模型，预积分测量项和噪声协方差的递推只与测量值、零偏等恒定值有关，这样当<span class="math inline">\(i\)</span>时刻的位姿更新时，不再需要重新积分。<strong>要说明的是</strong>，邱博的文章里将这部分成为噪声项，我认为是比较严谨合适的，这个测量噪声的协方差在给定的初值基础上会通过状态转移方程一步步进行递推。而在崔及其他人的博客中，把噪声作为一个<strong>误差状态</strong>来进行推导，虽然公式上没有区别，但并不符合其数学意义，但这样的好处是更加方便理解。</li>
+<li>然而，由于我们实际上会对陀螺和加速度计的零偏进行估计，其值也会发生变化。同样为了避免重新积分，将预积分项与bias的关系进行线性近似。通过求bias有扰动时对应的预积分项的变化，得到了预积分项对bias的Jacobian矩阵（实际上也是<strong>预积分变化量（噪声项）对bias变化量</strong>的Jacobian）。此时将噪声项的传播方程扩展为15维，添加了6维零偏的扰动量（噪声的本质反应的是测量的不确定性）。</li>
+<li>当我们完成了前面的推导，在实际的VIO系统中，通过视觉测量，得到预积分项的估计值，通过惯性测量，得到预积分项的测量值，于是我们得到了预积分项的测量残差（残差称为误差量显然更加合适）。<strong>优化问题的核心就是让这个残差最小</strong>，进一步推导出预积分项关于30维状态（两个时刻的位姿共18维，零偏各6维）的Jacobian矩阵，即可进行优化。注意由于最小二乘优化时用了马氏距离，因此需要用协方差矩阵对残差进行加权（这就是上面计算<strong>噪声协方差矩阵</strong>的意义），这相当于，积分出来的预积分项与视觉解算的对应项之间有误差，k+1时刻的零偏和k时刻的零偏有误差，这个误差来源于两部分：1）状态本身不准；2）量测有噪声。通过设置噪声协方差矩阵，在优化结果中考虑了量测噪声的影响，使得估计的状态更准确。</li>
+</ul>
+<h4 id="解方程的技巧">解方程的技巧</h4>
+<ol type="1">
+<li>对形如<span class="math inline">\(A_1x=b_1,A_2x=b_2...\)</span>的方程组进行求解时，如果<span class="math inline">\(b_1,b_2...\)</span>都是接近0的值，计算的数值稳定性会有问题，此时可以转换为求解<span class="math inline">\((A_1+A_2)x=b_1+b_2\)</span>的形式。</li>
+<li>如果A、b矩阵的元素值太小，可以通过同时放大来保证计算的稳定性。</li>
+<li>视觉惯性联合初始化时，求解尺度因子的方程中由于对应的项比较大，转而求100s，使得系数矩阵病态程度大大降低。</li>
+</ol>
+<h3 id="位姿图优化和回环检测">位姿图优化和回环检测</h3>
+<p>这部分功能主要在pose_graph_node中进行实现。VINS回环检测的基本思路是固定初始的世界系，之后不断通过回环去纠正当前关键帧对应的世界坐标系和初始世界坐标系之间的偏差。</p>
+<h4 id="main函数-2">main函数</h4>
+<p>首先读取了大量的参数，如果开启回环会读取词典和BRIEF描述子的模板等等。之后订阅了7个topic，执行其对应的回调函数。这些话题的发布者都在后端的优化线程中进行实例化并发布消息。</p>
+<p>然后实例化5个publisher，其中包括了一个向后端发送回环帧信息的发布者。之后开启了pose_graph的主线程，循环执行process函数。</p>
+<p>此外，由于Posegraph类的实例被定义为全局变量，程序一开始就会对其进行初始化，并且开启4自由度优化的线程。</p>
+<h4 id="回环检测和匹配主要流程">回环检测和匹配主要流程：</h4>
+<p>由于图像、位姿是从不同的话题中订阅的，首先进行了同步的判断，然后开始挑选关键帧，隔一定帧数才进行一次判断，如果拿到的帧的位姿与上一帧的位姿差距比较大，将其设为关键帧（主要考察了平移向量的模值）。关键帧在实例化时会对已有的特征点进行描述子计算，还会重新提取500个特征点用于进行词袋模型的建立。</p>
+<p>-&gt; addKeyFrame：实现关键帧<span class="math inline">\(KF_n\)</span>添加和回环检测的主要函数</p>
+<ul>
+<li><p>首先根据上一次求得的<span class="math inline">\(T_{w_k}^{w_0}\)</span>将新的关键帧的位姿变换到准确的世界坐标系下，这里的这个变换是用来合并地图的，也就是将新的地图对齐到旧的地图下，而优化问题解决的是同一个地图内一段时间产生的漂移；</p></li>
+<li><p>进行回环检测，获得有回环关系的最早的关键帧<span class="math inline">\(KF_o\)</span>，同时也会将当前的关键帧添加到字典数据库中。</p></li>
+<li><p>如果检测到回环：</p>
+<p>-&gt; findConnection：寻找并建立关键帧与回环帧之间的匹配关系</p>
+<p>1）使用BRIEF描述子在当前关键帧与历史回环帧之间进行特征匹配；</p>
+<p>2）如果点数达到要求，利用RANSAC PnP再进行一次筛选；点数仍足够多的情况下，通过当前帧的3D点和历史帧的2D点的匹配，求解出历史帧到当前世界坐标系的位姿变换<span class="math inline">\(T_{b_o}^{w_k}\)</span></p>
+<p>3）如果仍然保留足够多的匹配点数，将当前帧到历史帧的位姿变换保存起来。此外为实现快速重定位，将历史帧匹配到的点、历史帧的位姿发布给后端，作为solveOdometry优化项的一部分。</p>
+<p>-&gt; 合并地图：如果上一步匹配成功，利用历史帧的位姿和两帧之间的相对关系计算出当前帧的位姿<span class="math inline">\(T_{c_k}^{w_o}\)</span>，求这个位姿与里程计解算的位姿之间的相对变换就可以得到<span class="math inline">\(T_{w_k}^{w_o}\)</span>，将世界坐标系统一起来。这里还涉及了一个地图合并的过程，如果当前帧和历史帧不是同一个地图序列里的，会将当前帧的地图合并到历史地图中（通过求得的世界系相对变换）。</p>
+<p>最后会将当前帧放到优化队列中。</p></li>
+</ul>
+<h4 id="dof优化">4DOF优化</h4>
+<p>在optimize4DoF函数中进行实现，由于重力是可观的，因此我们认为俯仰角和横滚角不会有累计误差，因此优化的位姿只有四个自由度。位姿图优化时的边有两种：</p>
+<p>1）当前帧和之前帧构成的测量残差，称为序列边。对关键帧数据库中的所有时间早于当前帧的帧进行遍历，找到其至多四个更早的帧构建测量残差。</p>
+<p>2）当前帧和回环帧构成的测量残差，称为回环边。优化时回环帧的位姿会被固定下来。</p>
+<p>关于位姿图优化，知乎有一个相关的<a target="_blank" rel="noopener" href="https://www.zhihu.com/question/291275949/answer/474537036">问题</a>，邱博也在下面做了回答。说一下我个人的理解：目前我看到的位姿图的优化过程都是在检测到回环的时候，其目的就是为了纠正长时间的漂移，从代码来看，序列边是一直在被添加的，但回环边只在引入回环信息的两帧之间添加，位姿图优化的意义就是利用回环边去纠正序列边。因为长时间运行VIO的结果产生了漂移，VIO计算的<span class="math inline">\(KF_n\)</span>与<span class="math inline">\(KF_o\)</span>之间的位姿与通过PnP求解的位姿之间有一定的差值，这就是累积的漂移误差，在位姿图中加入回环边之后，这个漂移误差将在各帧之间的位姿上均摊，从而实现关键帧位姿的优化。也就是说，没有回环边加入的时候，位姿图是没办法优化的，看程序也能看出，序列边产生残差的方式本身用的就是同源的数据（都是来自VIO计算的位姿），无法有效优化。</p>
+<p>优化结束之后，会更新当前帧的位姿，同时求出优化后位姿相对于VIO里程计解算位姿的相对变换。</p>
+<h4 id="快速重定位">快速重定位</h4>
+<p>快速重定位的思路是，回环优化可能耗时比较久，对位姿的修正不够即时，在这种情况下，不需要利用全部的约束，只关注某个<strong>同时存在于回环检测的关键帧数据库以及前端滑窗中</strong>的帧，如果认为回环中的位姿更加准确，那么就可以实现对滑窗中帧的位姿的修正。<u>这里的问题是，对于同时存在于后端和回环的帧，回环帧中的位姿是否一定更准呢？</u></p>
+<p>1）在pose_graph_node中，得到了实现快速重定位所需要的历史关键帧的位姿信息；</p>
+<p>2）后端完成了预积分之后，接收快速重定位需要的信息，主要包括：历史帧的位姿；历史帧匹配到的特征点信息（这些点在历史帧中的归一化坐标和对应的id）；历史帧在回环数据库中的索引。</p>
+<p>之后调用setReloFrame，如果历史帧此时仍在滑窗内，实现快速重定位的标志量置真，此时这一帧的位姿会有两个值：一个是在滑窗内的值，保存到relo_Pose中，另一个历史帧的位姿prev_relo_r、t</p>
+<p>3）后端要进行优化时，快速重定位信息将作为优化项的一部分添加，遍历历史帧看到的特征点，找到这些点第一次被观测到的帧，利用这两帧构建一个视觉残差项加入到优化器中。注意此时优化对象是relo_Pose（问题是这一项应该包含在了视觉测量中？？这不是重复优化了吗？）</p>
+<p>4）优化结束之后通过double2vector转换数据类型时，得到prev_relo_t与优化解算的位姿之间的差值，也就是得到了通过回环解算的位姿和优化解算的位姿之间的相对变换，如果我们认为回环帧的位姿是更准的，那么通过这种方式就可以对当前的位姿进行修正。（但是从代码来看这部分内容只是测试了一下效果，输出到RVIZ显示了轨迹，没有真正取改变当前的位姿）</p>
+<h2 id="参考文献">参考文献</h2>
+<ol type="1">
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/158907147">VINS-Mono 理论详细解读</a></li>
+<li><a target="_blank" rel="noopener" href="https://zhehangt.github.io/2020/03/12/SLAM/VINS/VINSMarginalization/">VINS-Mono 中的 Marginalization</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/PetWorm/IMU-Preintegration-Propogation-Doc">邱博关于预积分的总结推导</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/StevenCui/VIO-Doc">崔华坤老师关于VINS的推导</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/SLAM/" rel="tag"># SLAM</a>
+              <a href="/tags/VINS-MONO/" rel="tag"># VINS-MONO</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/%E7%81%B5%E7%AC%BC.html" rel="prev" title="英雄与悲剧">
+      <i class="fa fa-chevron-left"></i> 英雄与悲剧
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#vins-mono%E4%BB%A3%E7%A0%81%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0"><span class="nav-number">1.</span> <span class="nav-text">VINS-MONO代码阅读笔记</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%84%E7%BA%BF%E7%A8%8B%E6%B5%81%E7%A8%8B"><span class="nav-number">1.1.</span> <span class="nav-text">各线程流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%89%8D%E7%AB%AF%E5%9B%BE%E5%83%8F%E8%B7%9F%E8%B8%AA%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.1.1.</span> <span class="nav-text">前端图像跟踪线程：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#main%E5%87%BD%E6%95%B0"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">main函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0img_callback"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">回调函数img_callback</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%86%E8%A7%89%E6%83%AF%E6%80%A7%E9%87%8C%E7%A8%8B%E8%AE%A1"><span class="nav-number">1.1.2.</span> <span class="nav-text">视觉惯性里程计</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#main%E5%87%BD%E6%95%B0-1"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">main函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%87%8C%E7%A8%8B%E8%AE%A1%E4%B8%BB%E8%A6%81%E6%B5%81%E7%A8%8B"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">里程计主要流程</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E6%B5%8B%E9%87%8F%E4%BF%A1%E6%81%AF"><span class="nav-number">1.1.2.2.1.</span> <span class="nav-text">获取测量信息</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%A2%84%E7%A7%AF%E5%88%86"><span class="nav-number">1.1.2.2.2.</span> <span class="nav-text">预积分</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96%E5%92%8C%E7%B4%A7%E8%80%A6%E5%90%88%E4%BC%98%E5%8C%96"><span class="nav-number">1.1.2.2.3.</span> <span class="nav-text">初始化和紧耦合优化</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BE%B9%E7%BC%98%E5%8C%96%E4%B8%8Efej"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">边缘化与FEJ</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%A3%E4%BB%B7%E5%87%BD%E6%95%B0%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.1.2.4.</span> <span class="nav-text">代价函数设置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%A2%84%E7%A7%AF%E5%88%86%E6%80%BB%E7%BB%93"><span class="nav-number">1.1.2.5.</span> <span class="nav-text">预积分总结</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%A3%E6%96%B9%E7%A8%8B%E7%9A%84%E6%8A%80%E5%B7%A7"><span class="nav-number">1.1.2.6.</span> <span class="nav-text">解方程的技巧</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%8D%E5%A7%BF%E5%9B%BE%E4%BC%98%E5%8C%96%E5%92%8C%E5%9B%9E%E7%8E%AF%E6%A3%80%E6%B5%8B"><span class="nav-number">1.1.3.</span> <span class="nav-text">位姿图优化和回环检测</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#main%E5%87%BD%E6%95%B0-2"><span class="nav-number">1.1.3.1.</span> <span class="nav-text">main函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9E%E7%8E%AF%E6%A3%80%E6%B5%8B%E5%92%8C%E5%8C%B9%E9%85%8D%E4%B8%BB%E8%A6%81%E6%B5%81%E7%A8%8B"><span class="nav-number">1.1.3.2.</span> <span class="nav-text">回环检测和匹配主要流程：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#dof%E4%BC%98%E5%8C%96"><span class="nav-number">1.1.3.3.</span> <span class="nav-text">4DOF优化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BF%AB%E9%80%9F%E9%87%8D%E5%AE%9A%E4%BD%8D"><span class="nav-number">1.1.3.4.</span> <span class="nav-text">快速重定位</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">1.2.</span> <span class="nav-text">参考文献</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Qxz</p>
+  <div class="site-description" itemprop="description">Nobody exists on purpose.Nobody belongs anywhere.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/QuXuzhong" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;QuXuzhong" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.zhihu.com/people/qu-xu-zhong-83" title="Zhihu → https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;qu-xu-zhong-83" rel="noopener" target="_blank"><i class="fab fa-zhihu fa-fw"></i>Zhihu</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Qxz</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
