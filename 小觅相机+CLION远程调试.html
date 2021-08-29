@@ -20,20 +20,28 @@
     var CONFIG = {"hostname":"shisirqxz.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","width":240,"display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="电影结束，灯光亮起，伴着刘浩存的歌声开始放片花，然而影厅里没有一个人起身，大家都静静坐着，或与身边的人喁喁私语，消化着让人动容的一秒钟。 几天前这部电影在金鸡首映由于“技术原因”被撤档，不出意外地引发了种种猜测，一部分装自己最懂的说这是营销套路，另一部分又拉起了大旗开始明枪暗箭地讽刺总局，不管真相是什么，至少今天我没有错过这部佳作。">
+  <meta name="description" content="小觅相机配置及远程调试 好久没写博客了，找工作有点焦头烂额。但是项目还是要做。。。虽然小觅已经倒闭了，最近还是要用实验室的祖传小觅做点东西，所以研究了一下用法，主要是环境配置以及远程调试的问题。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="一秒钟">
-<meta property="og:url" content="https://shisirqxz.com/%E4%B8%80%E7%A7%92%E9%92%9F.html">
+<meta property="og:title" content="Ubuntu安装和开发环境配置">
+<meta property="og:url" content="https://shisirqxz.com/%E5%B0%8F%E8%A7%85%E7%9B%B8%E6%9C%BA+CLION%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95.html">
 <meta property="og:site_name" content="Qxz&#39;s Blog">
-<meta property="og:description" content="电影结束，灯光亮起，伴着刘浩存的歌声开始放片花，然而影厅里没有一个人起身，大家都静静坐着，或与身边的人喁喁私语，消化着让人动容的一秒钟。 几天前这部电影在金鸡首映由于“技术原因”被撤档，不出意外地引发了种种猜测，一部分装自己最懂的说这是营销套路，另一部分又拉起了大旗开始明枪暗箭地讽刺总局，不管真相是什么，至少今天我没有错过这部佳作。">
+<meta property="og:description" content="小觅相机配置及远程调试 好久没写博客了，找工作有点焦头烂额。但是项目还是要做。。。虽然小觅已经倒闭了，最近还是要用实验室的祖传小觅做点东西，所以研究了一下用法，主要是环境配置以及远程调试的问题。">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2020-11-27T12:49:46.000Z">
-<meta property="article:modified_time" content="2020-11-28T01:48:49.525Z">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%951.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%952.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%957.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%953.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%955.png">
+<meta property="article:published_time" content="2020-08-26T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-08-29T09:23:51.644Z">
 <meta property="article:author" content="Qxz">
-<meta property="article:tag" content="观影">
+<meta property="article:tag" content="Ubuntu">
+<meta property="article:tag" content="软件和工具">
+<meta property="article:tag" content="CLION远程调试">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%951.png">
 
-<link rel="canonical" href="https://shisirqxz.com/%E4%B8%80%E7%A7%92%E9%92%9F.html">
+<link rel="canonical" href="https://shisirqxz.com/%E5%B0%8F%E8%A7%85%E7%9B%B8%E6%9C%BA+CLION%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95.html">
 
 
 <script id="page-configurations">
@@ -46,7 +54,7 @@
   };
 </script>
 
-  <title>一秒钟 | Qxz's Blog</title>
+  <title>Ubuntu安装和开发环境配置 | Qxz's Blog</title>
   
 
 
@@ -161,7 +169,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://shisirqxz.com/%E4%B8%80%E7%A7%92%E9%92%9F.html">
+    <link itemprop="mainEntityOfPage" href="https://shisirqxz.com/%E5%B0%8F%E8%A7%85%E7%9B%B8%E6%9C%BA+CLION%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -174,7 +182,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          一秒钟
+          Ubuntu安装和开发环境配置
         </h1>
 
         <div class="post-meta">
@@ -184,14 +192,14 @@
               </span>
               <span class="post-meta-item-text">Posted on</span>
 
-              <time title="Created: 2020-11-27 20:49:46" itemprop="dateCreated datePublished" datetime="2020-11-27T20:49:46+08:00">2020-11-27</time>
+              <time title="Created: 2020-08-27 00:00:00" itemprop="dateCreated datePublished" datetime="2020-08-27T00:00:00+08:00">2020-08-27</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-11-28 09:48:49" itemprop="dateModified" datetime="2020-11-28T09:48:49+08:00">2020-11-28</time>
+                <time title="Modified: 2021-08-29 17:23:51" itemprop="dateModified" datetime="2021-08-29T17:23:51+08:00">2021-08-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -199,7 +207,7 @@
               </span>
               <span class="post-meta-item-text">In</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AF%BB%E7%AB%A0%E6%91%98%E5%8F%A5/" itemprop="url" rel="index"><span itemprop="name">寻章摘句</span></a>
+                  <a href="/categories/%E5%B7%A5%E5%85%B7%E7%AE%B1/" itemprop="url" rel="index"><span itemprop="name">工具箱</span></a>
                 </span>
             </span>
 
@@ -214,14 +222,34 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>电影结束，灯光亮起，伴着刘浩存的歌声开始放片花，然而影厅里没有一个人起身，大家都静静坐着，或与身边的人喁喁私语，消化着让人动容的一秒钟。</p>
-<p>几天前这部电影在金鸡首映由于“技术原因”被撤档，不出意外地引发了种种猜测，一部分装自己最懂的说这是营销套路，另一部分又拉起了大旗开始明枪暗箭地讽刺总局，不管真相是什么，至少今天我没有错过这部佳作。</p>
+        <h1 id="小觅相机配置及远程调试">小觅相机配置及远程调试</h1>
+<p>好久没写博客了，找工作有点焦头烂额。但是项目还是要做。。。虽然小觅已经倒闭了，最近还是要用实验室的祖传小觅做点东西，所以研究了一下用法，主要是环境配置以及远程调试的问题。</p>
 <span id="more"></span>
-<p>这是一部导演、编剧和演员交相辉映，互相成就的电影。张译和范伟的演技令人折服。张九声在沙漠中满身风尘地出场，来到小镇上躲躲藏藏地暗中观察，在饭馆门口随手塞到兜里的几把葱和问路时的遮遮掩掩、欲盖弥彰，一个深陷窘境但又在苦苦追寻的困兽形象就立住了脚跟。范电影的出场更是绝妙，端着瓷缸满面春风地踱出放映厅，不动声色地接过了递到嘴边的烟、塞到兜里的花生，然后夹枪带棒地损了一句想取代自己位置的杨河又安抚了在等待电影放映的群众。来到面馆时众人招呼，接着四平八稳地坐下，桌上的食客连忙避开，简直神气十足。从口袋里掏出花生一颗颗摆在桌上的一幕更是绝妙，一个老成世故、精明自矜、地位特殊的老放映员的形象简直跃出屏幕一般。刘浩存表现出的灵动、狡黠和执拗、不服输的劲头也非常贴合张闺女的形象，就连那个一直眼泪汪汪的刘弟弟，也完全融入到了故事里，可乐、可怜、可爱。</p>
-<p>有优秀的表演打底，导演的镜头语言的功力、编剧凝练沉郁的故事表达都绽放出了令人动容的光芒。电影的题材确实是很敏感的，但是导演的表达非常克制，这种克制却又可谓独具匠心，反而使整部电影表现出了一种更加让人动容的力量。张九声是一个“坏分子”，他辛辛苦苦地逃出来只是为了看一眼14岁的女儿在《新闻简报》里一秒钟的出场镜头——看的时候我就有些疑惑，想见女儿日后未必没有机会，促使他下定决心逃出来的是什么呢？后来看导演采访说，张九声的女儿已经死了，为了洗脱父亲对自己的不良影响，她在劳动中表现得格外积极，不幸被没停稳的卡车撞死了。这个不知何故被删减的前因成为了这块故事最后的拼图，使得所有人物的行为都具备了充分的动机，也使得整个故事更加沉甸甸地坠人心肝。影片的基调并不是黯淡的、让人绝望的，反而是以黑色幽默的口吻，带着一丝暴戾地讲完了一个故事，张九声身陷让人绝望的境地，然而他为了一秒钟的镜头在做意义重大又无谓的抗争，这样的抗争没有让整个故事沉入一种祥林嫂的说教式哀伤里，反而在哀伤中注入了愤怒、失望和不甘心，以非常小的视角——整个故事也不过是发生在一场电影放映期间——对一个非常复杂的时代做了注脚。张九声只是这个故事的一个方面，范电影这个人物对描摹这一切的重要性不遑多让，小女孩更多地串联了故事的因果，是张九声和范电影的对手戏撑起了故事的格局。范电影处事的干练老辣、对群众表现出的狐假虎威的权威性和高高在上让人不喜，交代了儿子痴傻、无人接班时眼眶的一点热泪又让人可怜，偷偷报官又低声下气地邀功表明自己放映员的位子无人可以替代让人觉得可恨，看到最后暗地里塞给张九声女儿的胶片、把引以为傲的灯罩送给小女孩的行为，让人只能叹息。一个人的复杂性表现得淋漓尽致，一个时代的复杂性也就呼之欲出。如果说张九声的悲剧给了整个故事力量感，范电影的举止就给了整个故事真实的质感，珠璧交辉，相辅相成。</p>
-<p>胶片电影在这部片子中也起到了举足轻重的作用，看到胶卷和放映员的出场，我不由联想到了《天堂电影院》那个对我来说可谓所有电影中最经典的收尾。两部故事的基调和主题相去甚远，然而胶卷的作用却有异曲同工之妙，Alfredo给Toto留下的胶卷寄托了殷切的希望，寄托了小男孩的少年时代的美好情感、对电影对人生最初心的热忱，而范电影塞给张九声的胶片里，满含着同为父亲、同为一个时代下身不由自之人的和解和无奈，一秒钟的胶片是一个14岁女孩青春年华留给世界的最后缩影，是一个父亲能追寻到的最后的痕迹和幻灭。然而，那段美得让人窒息的吻被善意地保留，成为了一份弥足珍贵的礼物，这短短一秒的胶片却被人嘲笑和漠视，毫不留情地丢在了风沙里被时代淹没。小女孩拾起并精心保存的不过是一张毫无意义的包装纸，时隔两年后终于沉冤昭雪的张九声又从满心欢喜到一场空，徒劳地回到当年的地方踢扬着尘土，跌跌撞撞、踉踉跄跄。看到这里时不由想起了刚刚读完的围城的最后一段话：“这个时间落伍的计时机无意中包涵对人生的讽刺和感伤，深于一切语言、一切啼笑。”错落了时间的沙漠静静地躺在烈阳下，它已经淹没了几万年、几十万年、几百万年的岁月，又何尝会对曾经吞没过的一秒钟有过片刻的凝神注视呢。</p>
-<p>PS：看完电影心情激荡，手贱在网上翻翻影评，看到有些不知道什么成分的人评价这个故事：“过去的事都过去了，我们的当代生活难道没有题材可拍吗，老是拍些自己国家的黑历史有什么意义呢？”黑格尔说：“人类从历史中学到的唯一教训，就是人类无法从历史中学到任何教训”。诚不我欺啊。</p>
-<p>PPS：刘浩存笑起来的时候真的好像宋佳。希望这个妹子以后能继续加油。</p>
+<h2 id="sdk安装">SDK安装</h2>
+<p>小觅官网，我用的是深度版，参考官方<a target="_blank" rel="noopener" href="https://github.com/slightech/MYNT-EYE-D-SDK">链接</a>。如果直接在TX2上用，按照官方的方法下载编译即可，我选择的是自己安装opencv（因为要用附加库），然后装了ROS以及ROS自带的PCL库。之后可以跑一下官网的例程确认环境是否配置成功。</p>
+<p>如果提示cv::ToMat函数找不到，参考：<a target="_blank" rel="noopener" href="https://github.com/slightech/MYNT-EYE-D-SDK/issues/20">我在使用C++ SDK的时候出现了问题 #20</a>。由于Ifdef的预处理语句导致找不到ToMat函数，所以要在编译之前注释掉ifdef，让内部的语句始终生效。</p>
+<h2 id="配置远程连接">配置远程连接</h2>
+<p>没有IDE写程序很难受，但是TX2上的存储空间不太够配置CLION这种比较大型的编译器，所以决定尝试一下远程调试。</p>
+<p>主机类型：Ubuntu 18.04</p>
+<p>远程主机：Ubuntu18.04</p>
+<p>1）由于在两个Ubuntu主机之间进行无线通讯，在远程端需要安装rsync库，类unix系统下一个用来实现远程数据同步功能的库。</p>
+<p>安装：<code>sudo apt-get install rsync</code></p>
+<p>配置：找到<code>/etc/default/rsync</code>，修改<code>RSYNC_ENABLE=true</code>，启动rsync服务，然后修改<code>/etc/rsyncd.conf</code>配置文件，主要是加上<code>path=***</code>来指定自己要同步的文件目录，其他设置按照默认即可。如果要更详细的配置详见参考链接。</p>
+<p>2）配置CLION</p>
+<p>在本机打开CLION的设置项Settings-Build,Execution,Deployment-Toolchains，点加号添加一个新的Toolchain，然后点开Credentials的设置，进行连接配置</p>
+<p><img src="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%951.png" /></p>
+<p>下面是具体设置方式。Host填远程主机的本地IP，端口随便填一个（建议填大点避免奇怪的冲突），然后填入远程主机的用户名和密码，<strong>注意这里的用户名不能填root，而是填你创建的那个用户名！！！</strong>很多教程都填root，但我测试都失败了。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%952.png" /></p>
+<p>之后点开Deployment设置路径，Deployment path就是你远程端要同步的那个文件路径。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%957.png" /></p>
+<p>之后点开Cmake选项卡，点加号添加一个新的调试选项，重点是把Toolchain选择为开始设置的那个toolchain。确认之后退出来，如果没出问题就可以看到同步的信息了。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%953.png" /></p>
+<p>如下图，右下角就是文件上传的信息，然后右上角调试那里的下拉键可以选择是否远程调试。虽然由于远程调试时不能调用图形界面，所以imshow等语句都不能正常运行，但是编写代码至少方便了很多（至少有自动补全了）。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/QuXuzhong/PicRepo@main/image/%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%955.png" /></p>
+<h2 id="参考链接">参考链接</h2>
+<p><a target="_blank" rel="noopener" href="https://blog.jetbrains.com/zh-hans/2019/04/17/ide/#crowdin_phrase_789670">1. jetbrains官网教程</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/apple9005/article/details/82423149">2. Ubuntu下Rsync配置博客</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/slightech/MYNT-EYE-D-SDK">3.小觅相机的Github官网</a></p>
 
     </div>
 
@@ -231,7 +259,9 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/%E8%A7%82%E5%BD%B1/" rel="tag"># 观影</a>
+              <a href="/tags/Ubuntu/" rel="tag"># Ubuntu</a>
+              <a href="/tags/%E8%BD%AF%E4%BB%B6%E5%92%8C%E5%B7%A5%E5%85%B7/" rel="tag"># 软件和工具</a>
+              <a href="/tags/CLION%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95/" rel="tag"># CLION远程调试</a>
           </div>
 
         
@@ -239,13 +269,10 @@
 
         
     <div class="post-nav">
+      <div class="post-nav-item"></div>
       <div class="post-nav-item">
-    <a href="/%E5%BC%80%E7%AF%87%E6%98%8E%E4%B9%89.html" rel="prev" title="开篇明义">
-      <i class="fa fa-chevron-left"></i> 开篇明义
-    </a></div>
-      <div class="post-nav-item">
-    <a href="/Ubuntu%E5%AE%89%E8%A3%85%E5%92%8C%E9%85%8D%E7%BD%AE%E7%BA%AA%E5%BD%95.html" rel="next" title="Ubuntu安装和开发环境配置">
-      Ubuntu安装和开发环境配置 <i class="fa fa-chevron-right"></i>
+    <a href="/%E5%BC%80%E7%AF%87%E6%98%8E%E4%B9%89.html" rel="next" title="开篇明义">
+      开篇明义 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -305,6 +332,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B0%8F%E8%A7%85%E7%9B%B8%E6%9C%BA%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95"><span class="nav-number">1.</span> <span class="nav-text">小觅相机配置及远程调试</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#sdk%E5%AE%89%E8%A3%85"><span class="nav-number">1.1.</span> <span class="nav-text">SDK安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E8%BF%9C%E7%A8%8B%E8%BF%9E%E6%8E%A5"><span class="nav-number">1.2.</span> <span class="nav-text">配置远程连接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="nav-number">1.3.</span> <span class="nav-text">参考链接</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
