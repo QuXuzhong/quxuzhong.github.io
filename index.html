@@ -157,6 +157,82 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://shisirqxz.com/MSCKF%E7%B3%BB%E5%88%97%E7%AC%94%E8%AE%B0-Hybrid%20VIO.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Qxz">
+      <meta itemprop="description" content="Nobody exists on purpose.Nobody belongs anywhere.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Qxz's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/MSCKF%E7%B3%BB%E5%88%97%E7%AC%94%E8%AE%B0-Hybrid%20VIO.html" class="post-title-link" itemprop="url">MSCKF系列笔记：Hybrid VIO</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-09-27 16:27:24 / Modified: 16:28:02" itemprop="dateCreated datePublished" datetime="2021-09-27T16:27:24+08:00">2021-09-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/SLAM%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">SLAM学习</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="msckf系列笔记hybrid-vio">MSCKF系列笔记：Hybrid VIO</h1>
+<p>Hybrid VIO是李明扬老师实现的EKF-SLAM和MSCKF融合的VIO方案。本文主要是阅读其原论文，梳理一下关键的思路和核心的公式。文章在开头指出，现有的VIO方案都是先设计出来，再看看能在什么算力的平台上去实时地运行。这种设计的策略问题在于既无法保证自己的结果在相同耗时下是最优的，也无法保证自己的结果在相同精度下是最快的。此外，不同的环境下不同的算法的表现也各有高低，因此作者旨在提出一种新的设计策略，即一个hybrid estimator。通过预先的统计信息，将计算耗时作为一个优化问题的代价函数来找到每个时刻下最优的方法。细化到具体的方法，本文选择了EKF-SLAM和MSCKF混合的方案。这两者在处理时哪一个更优取决于特征点的跟踪长度，在运行时会根据具体的场景解一个单变量的优化问题，决定到底用哪种方式更新。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/MSCKF%E7%B3%BB%E5%88%97%E7%AC%94%E8%AE%B0-Hybrid%20VIO.html#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="https://shisirqxz.com/%E5%B0%8F%E8%A7%85%E7%9B%B8%E6%9C%BA+CLION%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -269,7 +345,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-07-20 10:02:56" itemprop="dateModified" datetime="2021-07-20T10:02:56+08:00">2021-07-20</time>
+                <time title="Modified: 2021-09-26 19:01:32" itemprop="dateModified" datetime="2021-09-26T19:01:32+08:00">2021-09-26</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -876,88 +952,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://shisirqxz.com/MSCKF%E7%AC%94%E8%AE%B0%EF%BC%9AMSCKF07.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Qxz">
-      <meta itemprop="description" content="Nobody exists on purpose.Nobody belongs anywhere.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Qxz's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/MSCKF%E7%AC%94%E8%AE%B0%EF%BC%9AMSCKF07.html" class="post-title-link" itemprop="url">MSCKF系列笔记——07论文公式推导</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2020-12-30 10:03:33" itemprop="dateCreated datePublished" datetime="2020-12-30T10:03:33+08:00">2020-12-30</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-07-20 11:35:13" itemprop="dateModified" datetime="2021-07-20T11:35:13+08:00">2021-07-20</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/SLAM%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">SLAM学习</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="msckf系列笔记mourikis-07">MSCKF系列笔记：（Mourikis 07)</h1>
-<p>最近打算在MSCKF的框架上做一些工作，Mourikis 07年的论文算是MSCKF系列的开山之作，阅读论文和崔华坤大神的博客，从头到尾推了一下公式。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/MSCKF%E7%AC%94%E8%AE%B0%EF%BC%9AMSCKF07.html#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1027,7 +1021,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-count">14</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
